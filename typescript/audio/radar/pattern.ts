@@ -23,7 +23,7 @@ export class Pattern {
         this.obstacles.splice(indexOf, 1)
     }
 
-    getObstacle(): ReadonlyArray<Obstacle> {
+    getObstacles(): ReadonlyArray<Obstacle> {
         return this.obstacles
     }
 
@@ -38,15 +38,15 @@ export class Pattern {
         const ev = ray.cross()
         const sq = 1.0 - ev * ev
         if (sq < 0.0) {
-            return 0.0
+            return normalized
         }
-        const dt = (Math.sqrt(sq) - ray.ry * ray.dy - ray.rx * ray.dx)
-        const position = Math.atan2(ray.ry + ray.dy * dt, ray.rx + ray.dx * dt) / TAU + 1.0
+        ray.move(Math.sqrt(sq) - ray.dot())
+        const position = ray.angle() / TAU
         return position - Math.floor(position)
     }
 
     * trace(normalized: number): Generator<Point, Point> {
-        const ray = new Ray().reset(normalized * TAU)
+        const ray = Pattern.Evaluator.reset(normalized * TAU)
         for (let count = 0; count < Pattern.MaxIterations; count++) {
             if (this.step(ray)) {
                 yield {x: ray.rx, y: ray.ry}
@@ -54,12 +54,12 @@ export class Pattern {
                 break
             }
         }
-        const ev = ray.rx * ray.dy - ray.ry * ray.dx
+        const ev = ray.cross()
         const sq = 1.0 - ev * ev
         if (sq < 0.0) {
             return
         }
-        ray.move((Math.sqrt(sq) - ray.ry * ray.dy - ray.rx * ray.dx))
+        ray.move((Math.sqrt(sq) - ray.dot()))
         yield {x: ray.rx, y: ray.ry}
     }
 

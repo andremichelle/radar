@@ -4,9 +4,6 @@ export class Ray {
     dx: number
     dy: number
 
-    set(rx: number, ry: number, dx: number, dy: number) {
-    }
-
     reset(angle: number): this {
         this.rx = 0.0
         this.ry = 0.0
@@ -36,7 +33,15 @@ export class Ray {
         return Math.sqrt(this.dx * this.dx + this.dy * this.dy)
     }
 
+    dot(): number {
+        return this.rx * this.dx + this.ry * this.dy
+    }
+
     cross(): number {
         return this.rx * this.dy - this.ry * this.dx
+    }
+
+    angle(): number {
+        return Math.atan2(this.ry, this.rx)
     }
 }

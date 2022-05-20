@@ -33,12 +33,13 @@ const showProgress = (() => {
     const pattern = new Pattern()
     pattern.addObstacle(new CircleSegmentObstacle(-0.25, 0.5, 0.5, 0.5, -0.5))
     pattern.addObstacle(new LineObstacle(-0.8, -0.5, 0.8, -0.5))
-    let phase = 0.0
 
     const canvas: HTMLCanvasElement = HTML.query('canvas')
     canvas.width = 1024
     canvas.height = 1024
     const context2D = canvas.getContext('2d')
+
+    let phase = 0.0
     const run = () => {
         context2D.clearRect(0.0, 0.0, 1024, 1024)
         context2D.save()
@@ -46,7 +47,7 @@ const showProgress = (() => {
         context2D.lineWidth = 0.0
         context2D.strokeStyle = 'orange'
         context2D.beginPath()
-        pattern.getObstacle().forEach(modifier => modifier.paint(context2D, 512))
+        pattern.getObstacles().forEach(modifier => modifier.paint(context2D, 512))
         context2D.stroke()
         context2D.beginPath()
         context2D.arc(0.0, 0.0, 511.5, 0.0, TAU, false)
