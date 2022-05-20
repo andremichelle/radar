@@ -1,0 +1,64 @@
+$color: #eaeaea
+$background-color: #1A1A1A
+
+\:root
+  --size: min(1vw, 1vh)
+
+html, body
+  margin: 0
+  padding: 0
+  overflow: hidden
+  position: relative
+  font-family: 'Open Sans', sans-serif
+  -webkit-overflow-scrolling: touch
+  touch-action: manipulation
+  color: $color
+  background-color: $background-color
+
+html
+  width: -webkit-fill-available
+  height: -webkit-fill-available
+
+body
+  display: flex
+  align-items: center
+  justify-content: center
+  min-width: 100vw
+  min-height: 100vh
+  /* mobile viewport bug fix */
+  min-width: -webkit-fill-available
+  min-height: -webkit-fill-available
+  border-radius: 64px
+  background-color: rgba(0, 255, 0, 0.2)
+
+*
+  user-select: none
+  -webkit-touch-callout: none
+  -webkit-user-select: none
+  -moz-user-select: none
+  -ms-user-select: none
+  -webkit-tap-highlight-color: transparent
+
+.hidden
+  display: none !important
+
+.invisible
+  visibility: hidden !important
+
+svg.preloader
+  --percentage: 0.0
+  --radius: 7
+
+  top: 50%
+  left: 50%
+  width: 64px
+  height: 64px
+  transform: translate(-50%, -50%)
+  position: absolute
+
+  &.error circle
+    stroke: #C30
+
+  > circle.progress
+    stroke-dasharray: calc(var(--radius) * 6.2831853)
+    stroke-dashoffset: calc(var(--radius) * 6.2831853 * (1.0 - var(--percentage)))

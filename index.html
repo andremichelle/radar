@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Webware Template</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/>
+    <meta content="no-cache" http-equiv="Pragma"/>
+    <meta content="0" http-equiv="Expires"/>
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+    <link rel="icon" href="favicon.ico" type=“image/x-icon”>
+    <link rel="shortcut icon" href="./favicon.ico" type=“image/x-icon”>
+    <link rel="preload" href="./fonts/Open_Sans/static/OpenSans/OpenSans-Regular.ttf" as="font" type="font/ttf"
+          crossorigin>
+    <link href="./bin/main.css" rel="stylesheet"/>
+    <script src="./bin/main.js" type="module"></script>
+</head>
+<body>
+<main class="invisible">
+    <div style="grid-area: 1 / 2; border: 3px dashed green;">top</div>
+    <div style="grid-area: 2 / 1; border: 3px dashed blue;">left</div>
+    <div style="grid-area: 2 / 2; border: 3px dashed orange;" class="center">center</div>
+    <div style="grid-area: 2 / 3; border: 3px dashed blue;">right</div>
+    <div style="grid-area: 3 / 2; border: 3px dashed green;">bottom</div>
+</main>
+<svg class="preloader" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+    <circle r="7" cx="10" cy="10" fill="none" stroke="#21242D" stroke-width="5"></circle>
+    <circle r="7" cx="10" cy="10" fill="none" stroke="#666D91" stroke-width="5" class="progress"></circle>
+</svg>
+</body>
+</html>

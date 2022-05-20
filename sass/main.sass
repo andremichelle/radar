@@ -1,0 +1,19 @@
+@import common
+
+// test grid. can be removed
+
+main
+  --border: calc(var(--size) * 10)
+  width: 100%
+  height: 100%
+  display: grid
+  grid-template: var(--border) 1fr var(--border) / var(--border) 1fr var(--border)
+
+  div
+    display: flex
+    align-items: center
+    justify-content: center
+    overflow: hidden
+    font-size: calc(var(--size) * 4)
+    white-space: pre-line
+    line-height: 0.6

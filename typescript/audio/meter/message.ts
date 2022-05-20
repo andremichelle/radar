@@ -1,0 +1,1 @@
+export type UpdateMeterMessage = { type: "update-meter", maxSquares: Float32Array[], maxPeaks: Float32Array[] }
