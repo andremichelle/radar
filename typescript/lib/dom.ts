@@ -282,3 +282,19 @@ export class RenderRequest {
         this.render()
     }
 }
+
+export const Colors: string[] = (() => {
+    const computedStyle = getComputedStyle(document.documentElement)
+    const colors: string[] = []
+    let index = 1
+    while(index < 10) {
+        const value = computedStyle.getPropertyValue(`--color${index++}`).trim()
+        if(value.length > 0) {
+            colors.push(value)
+        } else {
+            break
+        }
+    }
+    console.debug(`found ${colors}`)
+    return colors
+})()

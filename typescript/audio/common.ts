@@ -1,5 +1,4 @@
 // noinspection JSUnusedGlobalSymbols
-
 export const RENDER_QUANTUM: number = 128 | 0
 export const LOG_DB = Math.log(10.0) / 20.0
 export const dbToGain = (db: number): number => Math.exp(db * LOG_DB)

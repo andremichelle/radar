@@ -1,25 +1,35 @@
 import {Option, Options} from "../../lib/common.js"
 import {HTML} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
-import {Pattern} from "./pattern.js"
+import {Pattern, Point} from "./pattern.js"
 import {Ray} from "./ray.js"
 import {Renderer} from "./render.js"
 
 export class Editor {
     private static Evaluator: Ray = new Ray()
+    private static WaveformWidth: number = 64
+    private static Size: number = Renderer.Diameter + Editor.WaveformWidth
 
     private readonly canvas: HTMLCanvasElement = HTML.create('canvas', {
-        style: `width: ${Renderer.Diameter}px; height: ${Renderer.Diameter}px;`,
-        width: Renderer.Diameter * devicePixelRatio, height: Renderer.Diameter * devicePixelRatio
+        style: `width: ${Editor.Size}px; height: ${Editor.Size}px;`,
+        width: Editor.Size * devicePixelRatio, height: Editor.Size * devicePixelRatio
     })
     private readonly context = this.canvas.getContext('2d')
+    private readonly origin: Point = {x: 0.5, y: 0.0}
 
     private pattern: Option<Pattern> = Options.None
+    private waveform: Option<ImageBitmap> = Options.None
 
     private position: number = 0.0
 
     constructor() {
         this.update()
+    }
+
+    showAudioBuffer(buffer: AudioBuffer | null): void {
+        this.waveform = buffer === null
+            ? Options.None
+            : Options.valueOf(Renderer.renderWaveform(buffer, Editor.Size * devicePixelRatio, 64))
     }
 
     setPattern(pattern: Pattern | null): void {
@@ -34,21 +44,26 @@ export class Editor {
         const canvas = this.canvas
         const context = this.context
         context.clearRect(0.0, 0.0, canvas.width, canvas.height)
+
+        this.waveform.ifPresent(bitmap => context.drawImage(bitmap, 0, 0))
+
         context.save()
         context.scale(devicePixelRatio, devicePixelRatio)
-        context.translate(Renderer.Radius, Renderer.Radius)
+        context.translate(Editor.Size / 2, Editor.Size / 2)
         context.lineWidth = 0.0
 
         Renderer.renderRadarOutline(context)
+        Renderer.renderRayOrigin(context, this.origin)
 
         this.pattern.ifPresent(pattern => {
+            const ray = Editor.Evaluator.reuse(this.position * TAU, this.origin.x, this.origin.y)
             Renderer.renderObstacles(context, pattern)
-            Renderer.renderRayTrail(context, pattern, Editor.Evaluator.reuse(this.position * TAU, 0.25))
+            Renderer.renderRayTrail(context, pattern, ray, Editor.WaveformWidth)
         })
 
         context.restore()
 
-        this.position += 0.003
+        this.position += 0.002
         this.position -= Math.floor(this.position)
 
         requestAnimationFrame(this.update)

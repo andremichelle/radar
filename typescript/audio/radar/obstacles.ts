@@ -210,9 +210,9 @@ class QBezierEvaluator implements Evaluator {
             return dt
         }
 
-        const a: number = 1.0 / (ray.dx * cy2 - ray.dy * cx2)
-        const b: number = (ray.dx * cy1 - ray.dy * cx1) * a
-        const c: number = (ray.dx * this.y0 - ray.dy * this.x0 + ray.rx * ray.dy - ray.dx * ray.ry) * a
+        const a: number = ray.dx * cy2 - ray.dy * cx2
+        const b: number = (ray.dx * cy1 - ray.dy * cx1) / a
+        const c: number = (ray.dx * this.y0 - ray.dy * this.x0 + ray.rx * ray.dy - ray.dx * ray.ry) / a
 
         let d: number = b * b - 4.0 * c
         let t0: number

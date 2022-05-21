@@ -33,11 +33,16 @@ const showProgress = (() => {
     const pattern = new Pattern()
     pattern.addObstacle(new LineObstacle(-0.8, -0.5, 0.8, -0.5))
     pattern.addObstacle(new CircleObstacle(-0.25, 0.5, 0.5, 0.5, 0.5))
-    pattern.addObstacle(new QBezierObstacle(0.0, 0.25, 0.25, -0.5, 0.5, 0.25))
+    // pattern.addObstacle(new QBezierObstacle(0.0, 0.25, 0.25, -0.5, 0.5, 0.25))
 
     const editor = new Editor()
     editor.setPattern(pattern)
     HTML.query('main').appendChild(editor.element())
+
+    const buffer: AudioBuffer = await fetch('loops/dnb.ogg')
+        .then(result => result.arrayBuffer())
+        .then(buffer => context.decodeAudioData(buffer))
+    editor.showAudioBuffer(buffer)
 
     // prevent dragging entire document on mobile
     document.addEventListener('touchmove', (event: TouchEvent) => event.preventDefault(), {passive: false})

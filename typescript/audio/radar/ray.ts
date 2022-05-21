@@ -44,4 +44,12 @@ export class Ray {
     angle(): number {
         return Math.atan2(this.ry, this.rx)
     }
+
+    fromCenter(): void {
+        this.dx = this.rx
+        this.dy = this.ry
+        const len = this.length()
+        this.dx /= len
+        this.dy /= len
+    }
 }
