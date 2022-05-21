@@ -33,7 +33,7 @@ const showProgress = (() => {
     const pattern = new Pattern()
     pattern.addObstacle(new LineObstacle(-0.8, -0.5, 0.8, -0.5))
     pattern.addObstacle(new CircleObstacle(-0.25, 0.5, 0.5, 0.5, 0.5))
-    // pattern.addObstacle(new QBezierObstacle(0.0, 0.25, 0.25, -0.5, 0.5, 0.25))
+    pattern.addObstacle(new QBezierObstacle(-0.5, 0.25, 0.25, -0.5, 0.5, 0.25))
 
     const editor = new Editor()
     editor.setPattern(pattern)

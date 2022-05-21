@@ -8,10 +8,18 @@ interface Evaluator {
 
     modify(ray: Ray): void
 
-    paint(context: CanvasRenderingContext2D, scale: number): void
+    paintPath(context: CanvasRenderingContext2D, scale: number): void
+
+    paintHandler(context: CanvasRenderingContext2D, scale: number): void
 }
 
 const Epsilon: number = 0.000001
+
+const drawHandler = (context: CanvasRenderingContext2D, x: number, y: number, scale: number): void => {
+    context.beginPath()
+    context.arc(x * scale, y * scale, 4, 0.0, TAU)
+    context.fill()
+}
 
 class LineEvaluator implements Evaluator {
     private x0: number
@@ -54,13 +62,26 @@ class LineEvaluator implements Evaluator {
         ray.reflect(this.nx, this.ny)
     }
 
-    paint(context: CanvasRenderingContext2D, scale: number): void {
+    paintPath(context: CanvasRenderingContext2D, scale: number): void {
+        context.beginPath()
         context.moveTo(this.x0 * scale, this.y0 * scale)
         context.lineTo(this.x1 * scale, this.y1 * scale)
+        context.stroke()
+    }
+
+    paintHandler(context: CanvasRenderingContext2D, scale: number): void {
+        drawHandler(context, this.x0, this.y0, scale)
+        drawHandler(context, this.x1, this.y1, scale)
     }
 }
 
 class CurveEvaluator implements Evaluator {
+    private x0: number
+    private y0: number
+    private x1: number
+    private y1: number
+    private x2: number
+    private y2: number
     private cx: number
     private cy: number
     private radius: number
@@ -71,11 +92,9 @@ class CurveEvaluator implements Evaluator {
     set(x0: number, y0: number, x1: number, y1: number, bend: number): void {
         const dx = x1 - x0
         const dy = y1 - y0
-
         const ln = Math.sqrt(dx * dx + dy * dy)
         const nx = dy / ln
         const ny = -dx / ln
-
         const offset = ln * .5 * bend
         const x2 = x0 + dx * .5 + nx * offset
         const y2 = y0 + dy * .5 + ny * offset
@@ -99,6 +118,12 @@ class CurveEvaluator implements Evaluator {
         if (this.angle1 < 0.0) this.angle1 += TAU
         this.angleWidth = this.angle1 - this.angle0
         while (this.angleWidth < 0.0) this.angleWidth += TAU
+        this.x0 = x0
+        this.y0 = y0
+        this.x1 = x1
+        this.y1 = y1
+        this.x2 = x2
+        this.y2 = y2
     }
 
     capture(ray: Ray): number {
@@ -163,8 +188,16 @@ class CurveEvaluator implements Evaluator {
         ray.reflect((ray.rx - this.cx) / this.radius, (ray.ry - this.cy) / this.radius)
     }
 
-    paint(context: CanvasRenderingContext2D, scale: number): void {
+    paintPath(context: CanvasRenderingContext2D, scale: number): void {
+        context.beginPath()
         context.arc(this.cx * scale, this.cy * scale, this.radius * scale, this.angle0, this.angle1)
+        context.stroke()
+    }
+
+    paintHandler(context: CanvasRenderingContext2D, scale: number): void {
+        drawHandler(context, this.x0, this.y0, scale)
+        drawHandler(context, this.x1, this.y1, scale)
+        drawHandler(context, this.x2, this.y2, scale)
     }
 }
 
@@ -258,9 +291,19 @@ class QBezierEvaluator implements Evaluator {
         ray.dy -= xd * rf
     }
 
-    paint(context: CanvasRenderingContext2D, scale: number): void {
+    paintPath(context: CanvasRenderingContext2D, scale: number): void {
+        context.beginPath()
         context.moveTo(this.x0 * scale, this.y0 * scale)
         context.quadraticCurveTo(this.x1 * scale, this.y1 * scale, this.x2 * scale, this.y2 * scale)
+        context.stroke()
+    }
+
+    paintHandler(context: CanvasRenderingContext2D, scale: number): void {
+        drawHandler(context, this.x0, this.y0, scale)
+        drawHandler(context,
+            this.x1 * .5 + 0.25 * (this.x0 + this.x2),
+            this.y1 * .5 + 0.25 * (this.y0 + this.y2), scale)
+        drawHandler(context, this.x2, this.y2, scale)
     }
 
     private advanceDistance(t: number, ray: Ray): number {
@@ -313,8 +356,12 @@ export class LineObstacle implements Obstacle {
         this.evaluator.modify(ray)
     }
 
-    paint(context: CanvasRenderingContext2D, scale: number): void {
-        this.evaluator.paint(context, scale)
+    paintPath(context: CanvasRenderingContext2D, scale: number): void {
+        this.evaluator.paintPath(context, scale)
+    }
+
+    paintHandler(context: CanvasRenderingContext2D, scale: number) {
+        this.evaluator.paintHandler(context, scale)
     }
 }
 
@@ -348,8 +395,12 @@ export class CircleObstacle implements Obstacle {
         this.evaluator.modify(ray)
     }
 
-    paint(context: CanvasRenderingContext2D, scale: number): void {
-        this.evaluator.paint(context, scale)
+    paintPath(context: CanvasRenderingContext2D, scale: number): void {
+        this.evaluator.paintPath(context, scale)
+    }
+
+    paintHandler(context: CanvasRenderingContext2D, scale: number) {
+        this.evaluator.paintHandler(context, scale)
     }
 }
 
@@ -368,7 +419,11 @@ export class QBezierObstacle implements Obstacle {
         this.evaluator.modify(ray)
     }
 
-    paint(context: CanvasRenderingContext2D, scale: number) {
-        this.evaluator.paint(context, scale)
+    paintPath(context: CanvasRenderingContext2D, scale: number) {
+        this.evaluator.paintPath(context, scale)
+    }
+
+    paintHandler(context: CanvasRenderingContext2D, scale: number) {
+        this.evaluator.paintHandler(context, scale)
     }
 }
