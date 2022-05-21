@@ -113,7 +113,6 @@ class CurveEvaluator implements Evaluator {
         if (sq < 0.0) {
             return Number.MAX_VALUE
         }
-
         sq = Math.sqrt(sq)
 
         const ed = ey * dy + ex * dx
@@ -121,7 +120,6 @@ class CurveEvaluator implements Evaluator {
         const dt1 = -sq - ed
 
         let dt: number
-
         if (dt0 < Epsilon) {
             if (dt1 < Epsilon) {
                 return Number.MAX_VALUE
@@ -205,7 +203,7 @@ export class LineObstacle implements Evaluator {
     }
 }
 
-export class CircleSegmentObstacle implements Evaluator {
+export class CircleObstacle implements Evaluator {
     private static LineModeTolerance: number = 0.01
 
     private readonly lineEvaluator: LineEvaluator = new LineEvaluator()
@@ -218,7 +216,7 @@ export class CircleSegmentObstacle implements Evaluator {
     }
 
     set(x0: number, y0: number, x1: number, y1: number, bend: number): void {
-        if (bend > -CircleSegmentObstacle.LineModeTolerance && bend < CircleSegmentObstacle.LineModeTolerance) {
+        if (bend > -CircleObstacle.LineModeTolerance && bend < CircleObstacle.LineModeTolerance) {
             this.lineEvaluator.set(x0, y0, x1, y1)
             this.evaluator = this.lineEvaluator
         } else {

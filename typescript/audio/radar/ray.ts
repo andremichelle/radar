@@ -1,14 +1,20 @@
 export class Ray {
-    rx: number
-    ry: number
-    dx: number
-    dy: number
+    rx: number = 0.0
+    ry: number = 0.0
+    dx: number = 0.0
+    dy: number = 0.0
 
-    reset(angle: number): this {
-        this.rx = 0.0
-        this.ry = 0.0
-        this.dx = Math.cos(angle)
-        this.dy = Math.sin(angle)
+    /**
+     * @param angle zero is upwards, positive counter-clock wise
+     * @param x x position in circle [-1, +1]
+     * @param y y position in circle [-1, +1]
+     */
+    reuse(angle: number, x: number = 0.0, y: number = 0.0): this {
+        console.assert(Math.sqrt(x * x + y * y) < 1.0)
+        this.rx = x
+        this.ry = y
+        this.dx = Math.sin(angle)
+        this.dy = -Math.cos(angle)
         return this
     }
 
@@ -21,12 +27,6 @@ export class Ray {
         const reflect = 2.0 * (nx * this.dx + ny * this.dy)
         this.dx -= nx * reflect
         this.dy -= ny * reflect
-    }
-
-    normalize(): void {
-        const dd = this.length()
-        this.dx /= dd
-        this.dy /= dd
     }
 
     length(): number {

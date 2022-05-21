@@ -8,7 +8,6 @@ export interface Point {
 }
 
 export class Pattern {
-    private static Evaluator = new Ray()
     private static MaxIterations: number = 500
 
     private readonly obstacles: Obstacle[] = []
@@ -27,8 +26,7 @@ export class Pattern {
         return this.obstacles
     }
 
-    evaluate(normalized: number): number {
-        const ray = Pattern.Evaluator.reset(normalized * TAU)
+    evaluate(ray: Ray): number {
         let count = 0
         while (this.step(ray)) {
             if (++count > Pattern.MaxIterations) {
@@ -37,16 +35,13 @@ export class Pattern {
         }
         const ev = ray.cross()
         const sq = 1.0 - ev * ev
-        if (sq < 0.0) {
-            return normalized
-        }
+        console.assert(sq >= 0.0)
         ray.move(Math.sqrt(sq) - ray.dot())
         const position = ray.angle() / TAU
         return position - Math.floor(position)
     }
 
-    * trace(normalized: number): Generator<Point, Point> {
-        const ray = Pattern.Evaluator.reset(normalized * TAU)
+    * trace(ray: Ray): Generator<Point> {
         for (let count = 0; count < Pattern.MaxIterations; count++) {
             if (this.step(ray)) {
                 yield {x: ray.rx, y: ray.ry}
@@ -56,9 +51,7 @@ export class Pattern {
         }
         const ev = ray.cross()
         const sq = 1.0 - ev * ev
-        if (sq < 0.0) {
-            return
-        }
+        console.assert(sq > 0.0)
         ray.move((Math.sqrt(sq) - ray.dot()))
         yield {x: ray.rx, y: ray.ry}
     }
