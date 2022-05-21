@@ -1,11 +1,16 @@
 import {TAU} from "../../lib/math.js"
-import {Obstacle} from "./obstacles.js"
+import {Obstacle, OutlineEvaluator} from "./obstacles.js"
 import {Point, Ray} from "./ray.js"
 
-export class Pattern {
-    private static MaxIterations: number = 500
+export enum Reflection {
+    None, Obstacle, Outline
+}
 
-    private readonly obstacles: Obstacle[] = []
+export class Pattern {
+    private static MaxIterations: number = 250
+    private static Outline = new OutlineEvaluator()
+
+    private readonly obstacles: Obstacle[] = [Pattern.Outline]
 
     addObstacle(modifier: Obstacle): void {
         this.obstacles.push(modifier)
@@ -28,45 +33,41 @@ export class Pattern {
                 break
             }
         }
-        const ev = ray.cross()
-        const sq = 1.0 - ev * ev
-        console.assert(sq >= 0.0)
-        ray.move(Math.sqrt(sq) - ray.dot())
         const position = ray.angle() / TAU
         return position - Math.floor(position)
     }
 
     * trace(ray: Ray): Generator<Readonly<Point>> {
         let count = 0
-        while (this.step(ray)) {
+        while (this.step(ray) === Reflection.Obstacle) {
             if (++count === Pattern.MaxIterations) {
                 console.warn(`Max iteration reached ${count}!`)
                 break
             }
             yield ray
         }
-        const ev = ray.cross()
-        const sq = 1.0 - ev * ev
-        console.assert(sq > 0.0)
-        ray.move((Math.sqrt(sq) - ray.dot()))
         yield ray
     }
 
-    private step(ray: Ray): boolean {
-        let closestModifier: Obstacle = null
+    private step(ray: Ray): Reflection {
+        let closestObstacle: Obstacle = null
         let closestDistance = Number.MAX_VALUE
         this.obstacles.forEach(modifier => {
             const distance = modifier.capture(ray)
             if (distance > 0.0 && distance < closestDistance) {
-                closestModifier = modifier
+                closestObstacle = modifier
                 closestDistance = distance
             }
         })
-        if (null == closestModifier) {
-            return false
+        if (closestObstacle === null) {
+            return Reflection.None
         }
         ray.move(closestDistance)
-        closestModifier.reflect(ray)
-        return true
+        if(closestObstacle === Pattern.Outline) {
+            ray.burst()
+            return Reflection.Outline
+        }
+        closestObstacle.reflect(ray)
+        return Reflection.Obstacle
     }
 }

@@ -59,7 +59,7 @@ export class Ray implements Point {
         return Math.atan2(this.y, this.x)
     }
 
-    fromCenter(): void {
+    burst(): void {
         this.vx = this.x
         this.vy = this.y
         this.normalize()

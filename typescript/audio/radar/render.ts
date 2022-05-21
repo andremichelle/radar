@@ -4,10 +4,10 @@ import {Pattern} from "./pattern.js"
 import {Point, Ray} from "./ray.js"
 
 const RadarOutlineStyle = Colors[0]
-const ObstacleStyle = Colors[4]
-const RayTrailStyle = Colors[2]
-const WaveformPositionStyle = Colors[2]
+const ObstacleStyle = Colors[2]
+const RayTrailStyle = Colors[3]
 const WaveformStyle = Colors[1]
+const WaveformPositionStyle = Colors[4]
 
 export class Renderer {
     static Radius: number = 256
@@ -18,11 +18,14 @@ export class Renderer {
         context.beginPath()
         context.arc(0.0, 0.0, diameter, 0.0, TAU, false)
         context.arc(0.0, 0.0, Renderer.Radius, 0.0, TAU, true)
+        context.closePath()
         context.fill()
         context.fillStyle = 'rgba(255, 255, 255, 0.04)'
         context.beginPath()
         context.arc(0.0, 0.0, Renderer.Radius, 0.0, TAU, false)
+        context.closePath()
         context.fill()
+        context.fillStyle = 'none'
     }
 
     static renderRayOrigin(context: CanvasRenderingContext2D, origin: Point): void {
@@ -30,6 +33,7 @@ export class Renderer {
         context.lineWidth = 0.0
         context.beginPath()
         context.arc(origin.x * Renderer.Radius, origin.y * Renderer.Radius, 7, 0.0, TAU, false)
+        context.closePath()
         context.stroke()
     }
 
@@ -56,15 +60,16 @@ export class Renderer {
         for (const point of iterator) {
             context.lineTo(point.x * Renderer.Radius, point.y * Renderer.Radius)
         }
-        context.lineWidth = 1.0
+        context.lineWidth = 0.0
+        context.lineCap = 'round'
+        context.lineJoin = 'round'
         context.strokeStyle = RayTrailStyle
         context.stroke()
         context.beginPath()
         context.moveTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
-        ray.fromCenter()
         ray.move(waveformWidth / Renderer.Diameter)
         context.lineTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
-        context.lineWidth = 2.0
+        context.lineWidth = 1.0
         context.strokeStyle = WaveformPositionStyle
         context.stroke()
     }
@@ -92,7 +97,7 @@ export class Renderer {
         for (let x = 0 | 0; x <= resolution; x++) {
             const indexTo = x * sep
             while (index < indexTo) {
-                const value = (ch0[index] + ch1[index]) * 0.4
+                const value = (ch0[index] + ch1[index]) * 0.33
                 index++
                 min = Math.min(min, value)
                 max = Math.max(max, value)

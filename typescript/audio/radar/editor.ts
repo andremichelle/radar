@@ -8,7 +8,7 @@ import {Renderer} from "./render.js"
 
 export class Editor {
     private static Evaluator: Ray = new Ray()
-    private static WaveformWidth: number = 80
+    private static WaveformWidth: number = 96
     private static Size: number = Renderer.Diameter + Editor.WaveformWidth
     private static Radius: number = Editor.Size / 2
     private static CaptureRadius = 4.0 / Renderer.Radius

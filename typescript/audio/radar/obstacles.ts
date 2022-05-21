@@ -35,6 +35,28 @@ const drawHandler = (context: CanvasRenderingContext2D, x: number, y: number, sc
     context.fill()
 }
 
+export class OutlineEvaluator implements Evaluator {
+    dragHandlers: ReadonlyArray<DragHandler> = []
+
+    capture(ray: Ray): number {
+        const ev = ray.cross()
+        const sq = 1.0 - ev * ev
+        console.assert(sq >= 0.0)
+        return Math.sqrt(sq) - ray.dot()
+    }
+
+    paintHandler(context: CanvasRenderingContext2D, scale: number): void {
+        // fixed position
+    }
+
+    paintPath(context: CanvasRenderingContext2D, scale: number): void {
+        // invisible
+    }
+
+    reflect(ray: Ray): void {
+    }
+}
+
 class LineEvaluator implements Evaluator {
     private x0: number
     private y0: number
@@ -111,7 +133,7 @@ class LineEvaluator implements Evaluator {
     }
 }
 
-class CircleEvaluator implements Evaluator {
+class ArcEvaluator implements Evaluator {
     private x0: number
     private y0: number
     private x1: number
@@ -437,11 +459,11 @@ export class LineObstacle implements Obstacle {
     readonly dragHandlers: ReadonlyArray<DragHandler> = this.evaluator.dragHandlers
 }
 
-export class CircleObstacle implements Obstacle {
+export class ArcObstacle implements Obstacle {
     private static LineModeTolerance: number = 0.01
 
     private readonly lineEvaluator: LineEvaluator = new LineEvaluator()
-    private readonly circleEvaluator: CircleEvaluator = new CircleEvaluator()
+    private readonly arcEvaluator: ArcEvaluator = new ArcEvaluator()
 
     private evaluator: Evaluator = this.lineEvaluator
 
@@ -450,12 +472,12 @@ export class CircleObstacle implements Obstacle {
     }
 
     set(x0: number, y0: number, x1: number, y1: number, bend: number): void {
-        if (bend > -CircleObstacle.LineModeTolerance && bend < CircleObstacle.LineModeTolerance) {
+        if (bend > -ArcObstacle.LineModeTolerance && bend < ArcObstacle.LineModeTolerance) {
             this.lineEvaluator.set(x0, y0, x1, y1)
             this.evaluator = this.lineEvaluator
         } else {
-            this.circleEvaluator.set(x0, y0, x1, y1, bend)
-            this.evaluator = this.circleEvaluator
+            this.arcEvaluator.set(x0, y0, x1, y1, bend)
+            this.evaluator = this.arcEvaluator
         }
     }
 
@@ -475,7 +497,7 @@ export class CircleObstacle implements Obstacle {
         this.evaluator.paintHandler(context, scale)
     }
 
-    readonly dragHandlers: ReadonlyArray<DragHandler> = this.circleEvaluator.dragHandlers
+    readonly dragHandlers: ReadonlyArray<DragHandler> = this.arcEvaluator.dragHandlers
 }
 
 export class QBezierObstacle implements Obstacle {
