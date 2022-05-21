@@ -69,7 +69,8 @@ export class Pattern {
         if (null == closestModifier) {
             return false
         }
-        closestModifier.modify(ray, closestDistance)
+        ray.move(closestDistance)
+        closestModifier.modify(ray)
         return true
     }
 }

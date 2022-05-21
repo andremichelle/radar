@@ -6,7 +6,7 @@ export type Obstacle = Evaluator
 interface Evaluator {
     capture(ray: Ray): number
 
-    modify(ray: Ray, time: number): void
+    modify(ray: Ray): void
 
     paint(context: CanvasRenderingContext2D, scale: number): void
 }
@@ -50,8 +50,7 @@ class LineEvaluator implements Evaluator {
         return dt
     }
 
-    modify(ray: Ray, time: number): void {
-        ray.move(time)
+    modify(ray: Ray): void {
         ray.reflect(this.nx, this.ny)
     }
 
@@ -160,8 +159,7 @@ class CurveEvaluator implements Evaluator {
         return dt
     }
 
-    modify(ray: Ray, time: number): void {
-        ray.move(time)
+    modify(ray: Ray): void {
         ray.reflect((ray.rx - this.cx) / this.radius, (ray.ry - this.cy) / this.radius)
     }
 
@@ -170,7 +168,124 @@ class CurveEvaluator implements Evaluator {
     }
 }
 
-export class LineObstacle implements Evaluator {
+class QBezierEvaluator implements Evaluator {
+    private x0: number
+    private y0: number
+    private x1: number
+    private y1: number
+    private x2: number
+    private y2: number
+    private cachedT: number
+
+    set(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number): void {
+        this.x0 = x0
+        this.y0 = y0
+        this.x1 = x1
+        this.y1 = y1
+        this.x2 = x2
+        this.y2 = y2
+    }
+
+    capture(ray: Ray): number {
+        const cx1: number = (this.x1 - this.x0) * 2.0
+        const cy1: number = (this.y1 - this.y0) * 2.0
+        const cx2: number = this.x0 - this.x1 * 2.0 + this.x2
+        const cy2: number = this.y0 - this.y1 * 2.0 + this.y2
+
+        if (Math.abs(cx2) < Epsilon && Math.abs(cy2) < Epsilon) {
+            const lx: number = this.x2 - this.x0
+            const ly: number = this.y2 - this.y0
+            const px: number = this.x0 - ray.rx
+            const py: number = this.y0 - ray.ry
+            const ud: number = 1.0 / (ray.dx * ly - ray.dy * lx)
+            const dt: number = (ly * px - lx * py) * ud
+            if (dt < Epsilon) {
+                return Number.MAX_VALUE
+            }
+            const ua: number = (ray.dy * px - ray.dx * py) * ud
+            if (ua < 0.0 || ua > 1.0) {
+                return Number.MAX_VALUE
+            }
+            this.cachedT = ua
+            return dt
+        }
+
+        const a: number = 1.0 / (ray.dx * cy2 - ray.dy * cx2)
+        const b: number = (ray.dx * cy1 - ray.dy * cx1) * a
+        const c: number = (ray.dx * this.y0 - ray.dy * this.x0 + ray.rx * ray.dy - ray.dx * ray.ry) * a
+
+        let d: number = b * b - 4.0 * c
+        let t0: number
+        let t1: number
+        let dt0: number = Number.MAX_VALUE
+        let dt1: number = Number.MAX_VALUE
+
+        if (d > 0.0) {
+            d = Math.sqrt(d)
+            t0 = 0.5 * (-b + d)
+            if (0.0 <= t0 && t0 <= 1.0) {
+                dt0 = this.advanceDistance(t0, ray)
+            }
+            t1 = 0.5 * (-b - d)
+            if (0.0 <= t1 && t1 <= 1.0) {
+                dt1 = this.advanceDistance(t1, ray)
+            }
+            if (dt0 > dt1) {
+                this.cachedT = t1
+                return dt1
+            } else {
+                this.cachedT = t0
+                return dt0
+            }
+        } else if (d == 0.0) {
+            t0 = -0.5 * b
+            if (0.0 <= t0 && t0 <= 1.0) {
+                this.cachedT = t0
+                return this.advanceDistance(t0, ray)
+            }
+        }
+        return Number.MAX_VALUE
+    }
+
+    modify(ray: Ray): void {
+        let xd = this.cachedT * (this.x0 - 2.0 * this.x1 + this.x2) - this.x0 + this.x1
+        let yd = this.cachedT * (this.y0 - 2.0 * this.y1 + this.y2) - this.y0 + this.y1
+        const dd = Math.sqrt(xd * xd + yd * yd)
+        xd /= dd
+        yd /= dd
+        const rf = 2.0 * (xd * ray.dy - yd * ray.dx)
+        ray.dx += yd * rf
+        ray.dy -= xd * rf
+    }
+
+    paint(context: CanvasRenderingContext2D, scale: number): void {
+        context.moveTo(this.x0 * scale, this.y0 * scale)
+        context.quadraticCurveTo(this.x1 * scale, this.y1 * scale, this.x2 * scale, this.y2 * scale)
+    }
+
+    private advanceDistance(t: number, ray: Ray): number {
+        const nx = t * (this.x0 - 2.0 * this.x1 + this.x2) - this.x0 + this.x1
+        const ny = t * (this.y0 - 2.0 * this.y1 + this.y2) - this.y0 + this.y1
+        const dir: boolean = nx * ray.dy - ny * ray.dx < 0.0
+        const t0 = 1.0 - t
+        const t1 = t0 * t0
+        const t2 = t0 * t
+        const t3 = t * t
+        const dx = (t1 * this.x0 + 2.0 * t2 * this.x1 + t3 * this.x2) - ray.rx
+        const dy = (t1 * this.y0 + 2.0 * t2 * this.y1 + t3 * this.y2) - ray.ry
+        const side: boolean = dx * ny - dy * nx < 0.0
+        if (side == dir) {
+            return Number.MAX_VALUE
+        }
+        const dt = Math.sqrt(dx * dx + dy * dy)
+        if (dt < Epsilon) {
+            return Number.MAX_VALUE
+        }
+        return dt
+    }
+}
+
+export class LineObstacle implements Obstacle {
     private readonly evaluator: LineEvaluator = new LineEvaluator()
 
     private x0: number
@@ -194,8 +309,8 @@ export class LineObstacle implements Evaluator {
         return this.evaluator.capture(ray)
     }
 
-    modify(ray: Ray, time: number): void {
-        this.evaluator.modify(ray, time)
+    modify(ray: Ray): void {
+        this.evaluator.modify(ray)
     }
 
     paint(context: CanvasRenderingContext2D, scale: number): void {
@@ -203,7 +318,7 @@ export class LineObstacle implements Evaluator {
     }
 }
 
-export class CircleObstacle implements Evaluator {
+export class CircleObstacle implements Obstacle {
     private static LineModeTolerance: number = 0.01
 
     private readonly lineEvaluator: LineEvaluator = new LineEvaluator()
@@ -229,11 +344,31 @@ export class CircleObstacle implements Evaluator {
         return this.evaluator.capture(ray)
     }
 
-    modify(ray: Ray, time: number): void {
-        this.evaluator.modify(ray, time)
+    modify(ray: Ray): void {
+        this.evaluator.modify(ray)
     }
 
     paint(context: CanvasRenderingContext2D, scale: number): void {
+        this.evaluator.paint(context, scale)
+    }
+}
+
+export class QBezierObstacle implements Obstacle {
+    private readonly evaluator: QBezierEvaluator = new QBezierEvaluator()
+
+    constructor(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number) {
+        this.evaluator.set(x0, y0, x1, y1, x2, y2)
+    }
+
+    capture(ray: Ray): number {
+        return this.evaluator.capture(ray)
+    }
+
+    modify(ray: Ray) {
+        this.evaluator.modify(ray)
+    }
+
+    paint(context: CanvasRenderingContext2D, scale: number) {
         this.evaluator.paint(context, scale)
     }
 }

@@ -2,7 +2,7 @@ import {LimiterWorklet} from "./audio/limiter/worklet.js"
 import {MeterWorklet} from "./audio/meter/worklet.js"
 import {MetronomeWorklet} from "./audio/metronome/worklet.js"
 import {Editor} from "./audio/radar/editor.js"
-import {CircleObstacle, LineObstacle} from "./audio/radar/obstacles.js"
+import {CircleObstacle, LineObstacle, QBezierObstacle} from "./audio/radar/obstacles.js"
 import {Pattern} from "./audio/radar/pattern.js"
 import {Boot, newAudioContext, preloadImagesOfCssFile} from "./lib/boot.js"
 import {HTML} from "./lib/dom.js"
@@ -33,6 +33,7 @@ const showProgress = (() => {
     const pattern = new Pattern()
     pattern.addObstacle(new LineObstacle(-0.8, -0.5, 0.8, -0.5))
     pattern.addObstacle(new CircleObstacle(-0.25, 0.5, 0.5, 0.5, 0.5))
+    pattern.addObstacle(new QBezierObstacle(0.0, 0.25, 0.25, -0.5, 0.5, 0.25))
 
     const editor = new Editor()
     editor.setPattern(pattern)
