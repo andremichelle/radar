@@ -3,7 +3,7 @@ import {TAU} from "../../lib/math.js"
 import {Pattern, Point} from "./pattern.js"
 import {Ray} from "./ray.js"
 
-const RadarOutlineStyle = Colors[2]
+const RadarOutlineStyle = Colors[0]
 const ObstacleStyle = Colors[4]
 const RayTrailStyle = Colors[2]
 const WaveformPositionStyle = Colors[2]
@@ -13,12 +13,16 @@ export class Renderer {
     static Radius: number = 256
     static Diameter: number = Renderer.Radius << 1
 
-    static renderRadarOutline(context: CanvasRenderingContext2D): void {
-        context.strokeStyle = RadarOutlineStyle
-        context.lineWidth = 0.0
+    static renderRadarOutline(context: CanvasRenderingContext2D, diameter: number): void {
+        context.fillStyle = RadarOutlineStyle
         context.beginPath()
-        context.arc(0.0, 0.0, Renderer.Radius - 0.5, 0.0, TAU, false)
-        context.stroke()
+        context.arc(0.0, 0.0, diameter, 0.0, TAU, false)
+        context.arc(0.0, 0.0, Renderer.Radius, 0.0, TAU, true)
+        context.fill()
+        context.fillStyle = 'rgba(255, 255, 255, 0.04)'
+        context.beginPath()
+        context.arc(0.0, 0.0, Renderer.Radius, 0.0, TAU, false)
+        context.fill()
     }
 
     static renderRayOrigin(context: CanvasRenderingContext2D, origin: Point): void {
@@ -38,7 +42,6 @@ export class Renderer {
             .forEach(modifier => {
                 modifier.paintPath(context, Renderer.Radius)
             })
-
         pattern
             .getObstacles()
             .forEach(modifier => {
@@ -89,7 +92,7 @@ export class Renderer {
         for (let x = 0 | 0; x <= resolution; x++) {
             const indexTo = x * sep
             while (index < indexTo) {
-                const value = (ch0[index] + ch1[index]) * 0.5
+                const value = (ch0[index] + ch1[index]) * 0.4
                 index++
                 min = Math.min(min, value)
                 max = Math.max(max, value)
@@ -98,7 +101,7 @@ export class Renderer {
             const r1 = rr + Math.max(0.5, w2 * max)
             const angle = x / resolution * TAU
             const sn = Math.sin(angle)
-            const cs = Math.cos(angle)
+            const cs = -Math.cos(angle)
             context.moveTo(sn * r0, cs * r0)
             context.lineTo(sn * r1, cs * r1)
             const tmp = min

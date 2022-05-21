@@ -7,8 +7,9 @@ import {Renderer} from "./render.js"
 
 export class Editor {
     private static Evaluator: Ray = new Ray()
-    private static WaveformWidth: number = 64
+    private static WaveformWidth: number = 80
     private static Size: number = Renderer.Diameter + Editor.WaveformWidth
+    private static Radius: number = Editor.Size / 2
 
     private readonly canvas: HTMLCanvasElement = HTML.create('canvas', {
         style: `width: ${Editor.Size}px; height: ${Editor.Size}px;`,
@@ -29,7 +30,7 @@ export class Editor {
     showAudioBuffer(buffer: AudioBuffer | null): void {
         this.waveform = buffer === null
             ? Options.None
-            : Options.valueOf(Renderer.renderWaveform(buffer, Editor.Size * devicePixelRatio, 64))
+            : Options.valueOf(Renderer.renderWaveform(buffer, Editor.Size * devicePixelRatio, Editor.WaveformWidth))
     }
 
     setPattern(pattern: Pattern | null): void {
@@ -43,25 +44,22 @@ export class Editor {
     private update = (): void => {
         const canvas = this.canvas
         const context = this.context
+
         context.clearRect(0.0, 0.0, canvas.width, canvas.height)
-
-        this.waveform.ifPresent(bitmap => context.drawImage(bitmap, 0, 0))
-
         context.save()
         context.scale(devicePixelRatio, devicePixelRatio)
-        context.translate(Editor.Size / 2, Editor.Size / 2)
+        context.translate(Editor.Radius, Editor.Radius)
         context.lineWidth = 0.0
-
-        Renderer.renderRadarOutline(context)
+        Renderer.renderRadarOutline(context, Editor.Radius)
         Renderer.renderRayOrigin(context, this.origin)
-
         this.pattern.ifPresent(pattern => {
             const ray = Editor.Evaluator.reuse(this.position * TAU, this.origin.x, this.origin.y)
             Renderer.renderObstacles(context, pattern)
             Renderer.renderRayTrail(context, pattern, ray, Editor.WaveformWidth)
         })
-
         context.restore()
+
+        this.waveform.ifPresent(bitmap => context.drawImage(bitmap, 0, 0))
 
         this.position += 0.002
         this.position -= Math.floor(this.position)
