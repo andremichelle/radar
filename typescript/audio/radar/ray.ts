@@ -1,8 +1,13 @@
-export class Ray {
-    rx: number = 0.0
-    ry: number = 0.0
-    dx: number = 0.0
-    dy: number = 0.0
+export interface Point {
+    x: number
+    y: number
+}
+
+export class Ray implements Point {
+    x: number = 0.0
+    y: number = 0.0
+    vx: number = 0.0
+    vy: number = 0.0
 
     /**
      * @param angle zero is upwards, positive counter-clock wise
@@ -11,45 +16,52 @@ export class Ray {
      */
     reuse(angle: number, x: number = 0.0, y: number = 0.0): this {
         console.assert(Math.sqrt(x * x + y * y) < 1.0)
-        this.rx = x
-        this.ry = y
-        this.dx = Math.sin(angle)
-        this.dy = -Math.cos(angle)
+        this.x = x
+        this.y = y
+        this.vx = Math.sin(angle)
+        this.vy = -Math.cos(angle)
+        this.normalize()
         return this
     }
 
     move(dt: number): void {
-        this.rx += this.dx * dt
-        this.ry += this.dy * dt
+        console.assert(dt >= 0.0)
+        this.x += this.vx * dt
+        this.y += this.vy * dt
     }
 
     reflect(nx: number, ny: number): void {
-        const reflect = 2.0 * (nx * this.dx + ny * this.dy)
-        this.dx -= nx * reflect
-        this.dy -= ny * reflect
+        const reflect = 2.0 * (nx * this.vx + ny * this.vy)
+        this.vx -= nx * reflect
+        this.vy -= ny * reflect
+        this.normalize()
+    }
+
+    normalize() {
+        const l = this.length()
+        this.vx /= l
+        this.vy /= l
     }
 
     length(): number {
-        return Math.sqrt(this.dx * this.dx + this.dy * this.dy)
+        return Math.sqrt(this.vx * this.vx + this.vy * this.vy)
     }
 
     dot(): number {
-        return this.rx * this.dx + this.ry * this.dy
+        return this.x * this.vx + this.y * this.vy
     }
 
     cross(): number {
-        return this.rx * this.dy - this.ry * this.dx
+        return this.x * this.vy - this.y * this.vx
     }
 
     angle(): number {
-        return Math.atan2(this.ry, this.rx)
+        return Math.atan2(this.y, this.x)
     }
 
     fromCenter(): void {
-        this.dx = this.rx
-        this.dy = this.ry
-        const len = this.length()
-        this.dx /= len
-        this.dy /= len
+        this.vx = this.x
+        this.vy = this.y
+        this.normalize()
     }
 }

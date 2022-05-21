@@ -1,8 +1,9 @@
 import {Option, Options} from "../../lib/common.js"
 import {HTML} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
-import {Pattern, Point} from "./pattern.js"
-import {Ray} from "./ray.js"
+import {DragHandler} from "./obstacles.js"
+import {Pattern} from "./pattern.js"
+import {Point, Ray} from "./ray.js"
 import {Renderer} from "./render.js"
 
 export class Editor {
@@ -10,13 +11,14 @@ export class Editor {
     private static WaveformWidth: number = 80
     private static Size: number = Renderer.Diameter + Editor.WaveformWidth
     private static Radius: number = Editor.Size / 2
+    private static CaptureRadius = 4.0 / Renderer.Radius
 
     private readonly canvas: HTMLCanvasElement = HTML.create('canvas', {
         style: `width: ${Editor.Size}px; height: ${Editor.Size}px;`,
         width: Editor.Size * devicePixelRatio, height: Editor.Size * devicePixelRatio
     })
     private readonly context = this.canvas.getContext('2d')
-    private readonly origin: Point = {x: 0.5, y: 0.0}
+    private readonly origin: Point = {x: 0.0, y: 0.0}
 
     private pattern: Option<Pattern> = Options.None
     private waveform: Option<ImageBitmap> = Options.None
@@ -24,7 +26,43 @@ export class Editor {
     private position: number = 0.0
 
     constructor() {
+        this.canvas.addEventListener('mousedown', event => {
+            const local = this.globalToLocal(event.clientX, event.clientY)
+            this.pattern.ifPresent(pattern => {
+                const handler: DragHandler | null = pattern
+                    .getObstacles()
+                    .flatMap(obstacle => obstacle.dragHandlers)
+                    .reduce((prev: DragHandler, next: DragHandler) => {
+                        const distance = next.distance(local.x, local.y)
+                        if (prev === null) {
+                            return distance < Editor.CaptureRadius ? next : null
+                        }
+                        return distance < prev.distance(local.x, local.y) ? next : prev
+                    }, null)
+                if (handler !== null) {
+                    this.beginDrag(handler)
+                }
+            })
+        })
         this.update()
+    }
+
+    globalToLocal(x: number, y: number): Point {
+        const rect = this.canvas.getBoundingClientRect()
+        return {
+            x: (x - rect.left - Editor.Radius) / Renderer.Radius,
+            y: (y - rect.top - Editor.Radius) / Renderer.Radius
+        }
+    }
+
+    private beginDrag(handler: DragHandler): void {
+        const onMove = (event: MouseEvent) => {
+            const local = this.globalToLocal(event.clientX, event.clientY)
+            handler.moveTo(local.x, local.y)
+        }
+        window.addEventListener('mousemove', onMove)
+        window.addEventListener('mouseup', () =>
+            window.removeEventListener('mousemove', onMove), {once: true})
     }
 
     showAudioBuffer(buffer: AudioBuffer | null): void {
@@ -61,7 +99,7 @@ export class Editor {
 
         this.waveform.ifPresent(bitmap => context.drawImage(bitmap, 0, 0))
 
-        this.position += 0.002
+        this.position += 0.001
         this.position -= Math.floor(this.position)
 
         requestAnimationFrame(this.update)

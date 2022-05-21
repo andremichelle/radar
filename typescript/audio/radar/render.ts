@@ -1,7 +1,7 @@
 import {Colors} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
-import {Pattern, Point} from "./pattern.js"
-import {Ray} from "./ray.js"
+import {Pattern} from "./pattern.js"
+import {Point, Ray} from "./ray.js"
 
 const RadarOutlineStyle = Colors[0]
 const ObstacleStyle = Colors[4]
@@ -51,8 +51,8 @@ export class Renderer {
 
     static renderRayTrail(context: CanvasRenderingContext2D, pattern: Pattern, ray: Ray, waveformWidth: number): void {
         context.beginPath()
-        context.moveTo(ray.rx * Renderer.Radius, ray.ry * Renderer.Radius)
-        const iterator: Generator<Point> = pattern.trace(ray)
+        context.moveTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
+        const iterator: Generator<Readonly<Point>> = pattern.trace(ray)
         for (const point of iterator) {
             context.lineTo(point.x * Renderer.Radius, point.y * Renderer.Radius)
         }
@@ -60,10 +60,10 @@ export class Renderer {
         context.strokeStyle = RayTrailStyle
         context.stroke()
         context.beginPath()
-        context.moveTo(ray.rx * Renderer.Radius, ray.ry * Renderer.Radius)
+        context.moveTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
         ray.fromCenter()
         ray.move(waveformWidth / Renderer.Diameter)
-        context.lineTo(ray.rx * Renderer.Radius, ray.ry * Renderer.Radius)
+        context.lineTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
         context.lineWidth = 2.0
         context.strokeStyle = WaveformPositionStyle
         context.stroke()

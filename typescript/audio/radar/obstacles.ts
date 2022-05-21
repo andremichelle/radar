@@ -3,17 +3,31 @@ import {Ray} from "./ray.js"
 
 export type Obstacle = Evaluator
 
+export interface DragHandler {
+    distance(x: number, y: number): number
+
+    moveTo(x: number, y: number): void
+}
+
 interface Evaluator {
     capture(ray: Ray): number
 
-    modify(ray: Ray): void
+    reflect(ray: Ray): void
 
     paintPath(context: CanvasRenderingContext2D, scale: number): void
 
     paintHandler(context: CanvasRenderingContext2D, scale: number): void
+
+    dragHandlers: ReadonlyArray<DragHandler>
 }
 
-const Epsilon: number = 0.000001
+const Epsilon: number = 0.00001
+
+const distance = (x0: number, y0: number, x1: number, y1: number): number => {
+    const dx = x1 - x0
+    const dy = y1 - y0
+    return Math.sqrt(dx * dx + dy * dy)
+}
 
 const drawHandler = (context: CanvasRenderingContext2D, x: number, y: number, scale: number): void => {
     context.beginPath()
@@ -36,29 +50,25 @@ class LineEvaluator implements Evaluator {
         this.y0 = y0
         this.x1 = x1
         this.y1 = y1
-        this.dx = x1 - x0
-        this.dy = y1 - y0
-        const nl = Math.sqrt(this.dx * this.dx + this.dy * this.dy)
-        this.nx = this.dy / nl
-        this.ny = -this.dx / nl
+        this.update()
     }
 
     capture(ray: Ray): number {
-        const ud = this.dy * ray.dx - this.dx * ray.dy
-        const px = this.x0 - ray.rx
-        const py = this.y0 - ray.ry
+        const ud = this.dy * ray.vx - this.dx * ray.vy
+        const px = this.x0 - ray.x
+        const py = this.y0 - ray.y
         const dt = (this.dy * px - this.dx * py) / ud
         if (dt < Epsilon) {
             return Number.MAX_VALUE
         }
-        const ua = (ray.dy * px - ray.dx * py) / ud
+        const ua = (ray.vy * px - ray.vx * py) / ud
         if (ua < 0.0 || ua > 1.0) {
             return Number.MAX_VALUE
         }
         return dt
     }
 
-    modify(ray: Ray): void {
+    reflect(ray: Ray): void {
         ray.reflect(this.nx, this.ny)
     }
 
@@ -73,13 +83,40 @@ class LineEvaluator implements Evaluator {
         drawHandler(context, this.x0, this.y0, scale)
         drawHandler(context, this.x1, this.y1, scale)
     }
+
+    readonly dragHandlers: ReadonlyArray<DragHandler> = [
+        {
+            distance: (x: number, y: number) => distance(x, y, this.x0, this.y0),
+            moveTo: (x: number, y: number) => {
+                this.x0 = x
+                this.y0 = y
+                this.update()
+            }
+        },
+        {
+            distance: (x: number, y: number) => distance(x, y, this.x1, this.y1),
+            moveTo: (x: number, y: number) => {
+                this.x1 = x
+                this.y1 = y
+                this.update()
+            }
+        }]
+
+    private update(): void {
+        this.dx = this.x1 - this.x0
+        this.dy = this.y1 - this.y0
+        const nl = Math.sqrt(this.dx * this.dx + this.dy * this.dy)
+        this.nx = this.dy / nl
+        this.ny = -this.dx / nl
+    }
 }
 
-class CurveEvaluator implements Evaluator {
+class CircleEvaluator implements Evaluator {
     private x0: number
     private y0: number
     private x1: number
     private y1: number
+    private bend: number
     private x2: number
     private y2: number
     private cx: number
@@ -90,47 +127,19 @@ class CurveEvaluator implements Evaluator {
     private angleWidth: number
 
     set(x0: number, y0: number, x1: number, y1: number, bend: number): void {
-        const dx = x1 - x0
-        const dy = y1 - y0
-        const ln = Math.sqrt(dx * dx + dy * dy)
-        const nx = dy / ln
-        const ny = -dx / ln
-        const offset = ln * .5 * bend
-        const x2 = x0 + dx * .5 + nx * offset
-        const y2 = y0 + dy * .5 + ny * offset
-        const a1 = 2.0 * (x2 - x1)
-        const b1 = 0.5 / (y2 - y1)
-        const a2 = 2.0 * (x0 - x1)
-        const b2 = 2.0 * (y0 - y1)
-        const c1 = (x2 * x2 - x1 * x1) + (y2 * y2 - y1 * y1)
-        const c2 = (x0 * x0 - x1 * x1) + (y0 * y0 - y1 * y1)
-        this.cx = (c2 - b2 * c1 * b1) / (a2 - b2 * a1 * b1)
-        this.cy = (c1 - a1 * this.cx) * b1
-        this.radius = Math.sqrt((x1 - this.cx) * (x1 - this.cx) + (y1 - this.cy) * (y1 - this.cy))
-        this.angle0 = Math.atan2(y0 - this.cy, x0 - this.cx)
-        this.angle1 = Math.atan2(y1 - this.cy, x1 - this.cx)
-        if (bend < 0.0) {
-            const tmp = this.angle0
-            this.angle0 = this.angle1
-            this.angle1 = tmp
-        }
-        if (this.angle0 < 0.0) this.angle0 += TAU
-        if (this.angle1 < 0.0) this.angle1 += TAU
-        this.angleWidth = this.angle1 - this.angle0
-        while (this.angleWidth < 0.0) this.angleWidth += TAU
         this.x0 = x0
         this.y0 = y0
         this.x1 = x1
         this.y1 = y1
-        this.x2 = x2
-        this.y2 = y2
+        this.bend = bend
+        this.update()
     }
 
     capture(ray: Ray): number {
-        const dx = ray.dx
-        const dy = ray.dy
-        const ex = ray.rx - this.cx
-        const ey = ray.ry - this.cy
+        const dx = ray.vx
+        const dy = ray.vy
+        const ex = ray.x - this.cx
+        const ey = ray.y - this.cy
         const ev = ex * dy - ey * dx
 
         let sq = this.radius * this.radius - ev * ev
@@ -140,7 +149,7 @@ class CurveEvaluator implements Evaluator {
         sq = Math.sqrt(sq)
 
         const ed = ey * dy + ex * dx
-        const dt0 = +sq - ed
+        const dt0 = sq - ed
         const dt1 = -sq - ed
 
         let dt: number
@@ -184,8 +193,8 @@ class CurveEvaluator implements Evaluator {
         return dt
     }
 
-    modify(ray: Ray): void {
-        ray.reflect((ray.rx - this.cx) / this.radius, (ray.ry - this.cy) / this.radius)
+    reflect(ray: Ray): void {
+        ray.reflect((ray.x - this.cx) / this.radius, (ray.y - this.cy) / this.radius)
     }
 
     paintPath(context: CanvasRenderingContext2D, scale: number): void {
@@ -199,9 +208,74 @@ class CurveEvaluator implements Evaluator {
         drawHandler(context, this.x1, this.y1, scale)
         drawHandler(context, this.x2, this.y2, scale)
     }
+
+    readonly dragHandlers: ReadonlyArray<DragHandler> = [
+        {
+            distance: (x: number, y: number) => distance(x, y, this.x0, this.y0),
+            moveTo: (x: number, y: number) => {
+                this.x0 = x
+                this.y0 = y
+                this.update()
+            }
+        },
+        {
+            distance: (x: number, y: number) => distance(x, y, this.x1, this.y1),
+            moveTo: (x: number, y: number) => {
+                this.x1 = x
+                this.y1 = y
+                this.update()
+            }
+        },
+        {
+            distance: (x: number, y: number) => distance(x, y, this.x2, this.y2),
+            moveTo: (x: number, y: number) => {
+                const dx = this.x1 - this.x0
+                const dy = this.y1 - this.y0
+                const dd = Math.sqrt(dx * dx + dy * dy)
+                const cx = this.x0 + dx * .5
+                const cy = this.y0 + dy * .5
+                const px = x - cx
+                const py = y - cy
+                this.bend = 2.0 * (dy / dd * px - dx / dd * py)
+                this.update()
+            }
+        }]
+
+    private update(): void {
+        const dx = this.x1 - this.x0
+        const dy = this.y1 - this.y0
+        const ln = Math.sqrt(dx * dx + dy * dy)
+        const nx = dy / ln
+        const ny = -dx / ln
+        const offset = ln * 0.5 * this.bend
+        this.x2 = this.x0 + dx * 0.5 + nx * offset
+        this.y2 = this.y0 + dy * 0.5 + ny * offset
+        const a1 = 2.0 * (this.x2 - this.x1)
+        const b1 = 0.5 / (this.y2 - this.y1)
+        const a2 = 2.0 * (this.x0 - this.x1)
+        const b2 = 2.0 * (this.y0 - this.y1)
+        const c1 = (this.x2 * this.x2 - this.x1 * this.x1) + (this.y2 * this.y2 - this.y1 * this.y1)
+        const c2 = (this.x0 * this.x0 - this.x1 * this.x1) + (this.y0 * this.y0 - this.y1 * this.y1)
+        this.cx = (c2 - b2 * c1 * b1) / (a2 - b2 * a1 * b1)
+        this.cy = (c1 - a1 * this.cx) * b1
+        this.radius = Math.sqrt((this.x1 - this.cx) * (this.x1 - this.cx) + (this.y1 - this.cy) * (this.y1 - this.cy))
+        this.angle0 = Math.atan2(this.y0 - this.cy, this.x0 - this.cx)
+        this.angle1 = Math.atan2(this.y1 - this.cy, this.x1 - this.cx)
+        if (this.bend < 0.0) {
+            const tmp = this.angle0
+            this.angle0 = this.angle1
+            this.angle1 = tmp
+        }
+        if (this.angle0 < 0.0) this.angle0 += TAU
+        if (this.angle1 < 0.0) this.angle1 += TAU
+        this.angleWidth = this.angle1 - this.angle0
+        while (this.angleWidth < 0.0) this.angleWidth += TAU
+    }
 }
 
 class QBezierEvaluator implements Evaluator {
+    readonly dragHandlers: ReadonlyArray<DragHandler> = []
+
     private x0: number
     private y0: number
     private x1: number
@@ -228,14 +302,14 @@ class QBezierEvaluator implements Evaluator {
         if (Math.abs(cx2) < Epsilon && Math.abs(cy2) < Epsilon) {
             const lx: number = this.x2 - this.x0
             const ly: number = this.y2 - this.y0
-            const px: number = this.x0 - ray.rx
-            const py: number = this.y0 - ray.ry
-            const ud: number = 1.0 / (ray.dx * ly - ray.dy * lx)
-            const dt: number = (ly * px - lx * py) * ud
+            const px: number = this.x0 - ray.x
+            const py: number = this.y0 - ray.y
+            const ud: number = ray.vx * ly - ray.vy * lx
+            const dt: number = (ly * px - lx * py) / ud
             if (dt < Epsilon) {
                 return Number.MAX_VALUE
             }
-            const ua: number = (ray.dy * px - ray.dx * py) * ud
+            const ua: number = (ray.vy * px - ray.vx * py) / ud
             if (ua < 0.0 || ua > 1.0) {
                 return Number.MAX_VALUE
             }
@@ -243,9 +317,9 @@ class QBezierEvaluator implements Evaluator {
             return dt
         }
 
-        const a: number = ray.dx * cy2 - ray.dy * cx2
-        const b: number = (ray.dx * cy1 - ray.dy * cx1) / a
-        const c: number = (ray.dx * this.y0 - ray.dy * this.x0 + ray.rx * ray.dy - ray.dx * ray.ry) / a
+        const a: number = ray.vx * cy2 - ray.vy * cx2
+        const b: number = (ray.vx * cy1 - ray.vy * cx1) / a
+        const c: number = (ray.vx * this.y0 - ray.vy * this.x0 + ray.x * ray.vy - ray.vx * ray.y) / a
 
         let d: number = b * b - 4.0 * c
         let t0: number
@@ -280,15 +354,11 @@ class QBezierEvaluator implements Evaluator {
         return Number.MAX_VALUE
     }
 
-    modify(ray: Ray): void {
-        let xd = this.cachedT * (this.x0 - 2.0 * this.x1 + this.x2) - this.x0 + this.x1
-        let yd = this.cachedT * (this.y0 - 2.0 * this.y1 + this.y2) - this.y0 + this.y1
-        const dd = Math.sqrt(xd * xd + yd * yd)
-        xd /= dd
-        yd /= dd
-        const rf = 2.0 * (xd * ray.dy - yd * ray.dx)
-        ray.dx += yd * rf
-        ray.dy -= xd * rf
+    reflect(ray: Ray): void {
+        const dx = this.cachedT * (this.x0 - 2.0 * this.x1 + this.x2) - this.x0 + this.x1
+        const dy = this.cachedT * (this.y0 - 2.0 * this.y1 + this.y2) - this.y0 + this.y1
+        const dd = Math.sqrt(dx * dx + dy * dy)
+        ray.reflect(dy / dd, -dx / dd)
     }
 
     paintPath(context: CanvasRenderingContext2D, scale: number): void {
@@ -301,21 +371,21 @@ class QBezierEvaluator implements Evaluator {
     paintHandler(context: CanvasRenderingContext2D, scale: number): void {
         drawHandler(context, this.x0, this.y0, scale)
         drawHandler(context,
-            this.x1 * .5 + 0.25 * (this.x0 + this.x2),
-            this.y1 * .5 + 0.25 * (this.y0 + this.y2), scale)
+            this.x1 * 0.5 + 0.25 * (this.x0 + this.x2),
+            this.y1 * 0.5 + 0.25 * (this.y0 + this.y2), scale)
         drawHandler(context, this.x2, this.y2, scale)
     }
 
     private advanceDistance(t: number, ray: Ray): number {
         const nx = t * (this.x0 - 2.0 * this.x1 + this.x2) - this.x0 + this.x1
         const ny = t * (this.y0 - 2.0 * this.y1 + this.y2) - this.y0 + this.y1
-        const dir: boolean = nx * ray.dy - ny * ray.dx < 0.0
+        const dir: boolean = nx * ray.vy - ny * ray.vx < 0.0
         const t0 = 1.0 - t
         const t1 = t0 * t0
         const t2 = t0 * t
         const t3 = t * t
-        const dx = (t1 * this.x0 + 2.0 * t2 * this.x1 + t3 * this.x2) - ray.rx
-        const dy = (t1 * this.y0 + 2.0 * t2 * this.y1 + t3 * this.y2) - ray.ry
+        const dx = (t1 * this.x0 + 2.0 * t2 * this.x1 + t3 * this.x2) - ray.x
+        const dy = (t1 * this.y0 + 2.0 * t2 * this.y1 + t3 * this.y2) - ray.y
         const side: boolean = dx * ny - dy * nx < 0.0
         if (side == dir) {
             return Number.MAX_VALUE
@@ -352,8 +422,8 @@ export class LineObstacle implements Obstacle {
         return this.evaluator.capture(ray)
     }
 
-    modify(ray: Ray): void {
-        this.evaluator.modify(ray)
+    reflect(ray: Ray): void {
+        this.evaluator.reflect(ray)
     }
 
     paintPath(context: CanvasRenderingContext2D, scale: number): void {
@@ -363,13 +433,15 @@ export class LineObstacle implements Obstacle {
     paintHandler(context: CanvasRenderingContext2D, scale: number) {
         this.evaluator.paintHandler(context, scale)
     }
+
+    readonly dragHandlers: ReadonlyArray<DragHandler> = this.evaluator.dragHandlers
 }
 
 export class CircleObstacle implements Obstacle {
     private static LineModeTolerance: number = 0.01
 
     private readonly lineEvaluator: LineEvaluator = new LineEvaluator()
-    private readonly curveEvaluator: CurveEvaluator = new CurveEvaluator()
+    private readonly circleEvaluator: CircleEvaluator = new CircleEvaluator()
 
     private evaluator: Evaluator = this.lineEvaluator
 
@@ -382,8 +454,8 @@ export class CircleObstacle implements Obstacle {
             this.lineEvaluator.set(x0, y0, x1, y1)
             this.evaluator = this.lineEvaluator
         } else {
-            this.curveEvaluator.set(x0, y0, x1, y1, bend)
-            this.evaluator = this.curveEvaluator
+            this.circleEvaluator.set(x0, y0, x1, y1, bend)
+            this.evaluator = this.circleEvaluator
         }
     }
 
@@ -391,8 +463,8 @@ export class CircleObstacle implements Obstacle {
         return this.evaluator.capture(ray)
     }
 
-    modify(ray: Ray): void {
-        this.evaluator.modify(ray)
+    reflect(ray: Ray): void {
+        this.evaluator.reflect(ray)
     }
 
     paintPath(context: CanvasRenderingContext2D, scale: number): void {
@@ -402,9 +474,13 @@ export class CircleObstacle implements Obstacle {
     paintHandler(context: CanvasRenderingContext2D, scale: number) {
         this.evaluator.paintHandler(context, scale)
     }
+
+    readonly dragHandlers: ReadonlyArray<DragHandler> = this.circleEvaluator.dragHandlers
 }
 
 export class QBezierObstacle implements Obstacle {
+    readonly dragHandlers: ReadonlyArray<DragHandler> = []
+
     private readonly evaluator: QBezierEvaluator = new QBezierEvaluator()
 
     constructor(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number) {
@@ -415,8 +491,8 @@ export class QBezierObstacle implements Obstacle {
         return this.evaluator.capture(ray)
     }
 
-    modify(ray: Ray) {
-        this.evaluator.modify(ray)
+    reflect(ray: Ray) {
+        this.evaluator.reflect(ray)
     }
 
     paintPath(context: CanvasRenderingContext2D, scale: number) {

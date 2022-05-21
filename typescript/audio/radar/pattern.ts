@@ -1,11 +1,6 @@
 import {TAU} from "../../lib/math.js"
 import {Obstacle} from "./obstacles.js"
-import {Ray} from "./ray.js"
-
-export interface Point {
-    x: number
-    y: number
-}
+import {Point, Ray} from "./ray.js"
 
 export class Pattern {
     private static MaxIterations: number = 500
@@ -41,19 +36,20 @@ export class Pattern {
         return position - Math.floor(position)
     }
 
-    * trace(ray: Ray): Generator<Point> {
-        for (let count = 0; count < Pattern.MaxIterations; count++) {
-            if (this.step(ray)) {
-                yield {x: ray.rx, y: ray.ry}
-            } else {
+    * trace(ray: Ray): Generator<Readonly<Point>> {
+        let count = 0
+        while (this.step(ray)) {
+            if (++count === Pattern.MaxIterations) {
+                console.warn(`Max iteration reached ${count}!`)
                 break
             }
+            yield ray
         }
         const ev = ray.cross()
         const sq = 1.0 - ev * ev
         console.assert(sq > 0.0)
         ray.move((Math.sqrt(sq) - ray.dot()))
-        yield {x: ray.rx, y: ray.ry}
+        yield ray
     }
 
     private step(ray: Ray): boolean {
@@ -70,7 +66,7 @@ export class Pattern {
             return false
         }
         ray.move(closestDistance)
-        closestModifier.modify(ray)
+        closestModifier.reflect(ray)
         return true
     }
 }
