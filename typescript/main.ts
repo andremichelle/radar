@@ -7,6 +7,17 @@ import {Pattern} from "./audio/radar/pattern.js"
 import {Boot, newAudioContext, preloadImagesOfCssFile} from "./lib/boot.js"
 import {HTML} from "./lib/dom.js"
 
+/**
+ * TODO
+ * [ ] Use an obstacle for the radar outline
+ * [ ] On max iteration exceeded, use the last ray-position and atan2 => wave-position
+ * [ ] QBezier Dragging
+ * [ ] Create / Delete shapes
+ * [ ] loop bpm / duration in bars
+ * [ ] Time-stretcher with transient duration detection
+ * [ ] Editor snapping
+ */
+
 const showProgress = (() => {
     const progress: SVGSVGElement = document.querySelector("svg.preloader")
     window.onerror = () => progress.classList.add("error")
