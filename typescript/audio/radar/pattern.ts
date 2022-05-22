@@ -37,12 +37,13 @@ export class Pattern {
         return position - Math.floor(position)
     }
 
-    * trace(ray: Ray): Generator<Readonly<Point>> {
+    * trace(ray: Ray): Generator<Readonly<Point> | null> {
         let count = 0
         while (this.step(ray) === Reflection.Obstacle) {
             if (++count === Pattern.MaxIterations) {
                 console.warn(`Max iteration reached ${count}!`)
-                break
+                yield null
+                return
             }
             yield ray
         }

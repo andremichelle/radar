@@ -9,7 +9,6 @@ import {HTML} from "./lib/dom.js"
 
 /**
  * TODO
- * [ ] Use an obstacle for the radar outline
  * [ ] On max iteration exceeded, use the last ray-position and atan2 => wave-position
  * [ ] QBezier Dragging
  * [ ] Create / Delete shapes
