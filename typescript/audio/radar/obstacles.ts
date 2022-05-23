@@ -54,6 +54,7 @@ export class OutlineEvaluator implements Evaluator {
     }
 
     reflect(ray: Ray): void {
+        // ray track is done. no reflection needed.
     }
 }
 
@@ -296,8 +297,6 @@ class ArcEvaluator implements Evaluator {
 }
 
 class QBezierEvaluator implements Evaluator {
-    readonly dragHandlers: ReadonlyArray<DragHandler> = []
-
     private x0: number
     private y0: number
     private x1: number
@@ -397,6 +396,31 @@ class QBezierEvaluator implements Evaluator {
             this.y1 * 0.5 + 0.25 * (this.y0 + this.y2), scale)
         drawHandler(context, this.x2, this.y2, scale)
     }
+
+    readonly dragHandlers: ReadonlyArray<DragHandler> = [
+        {
+            distance: (x: number, y: number) => distance(x, y, this.x0, this.y0),
+            moveTo: (x: number, y: number) => {
+                this.x0 = x
+                this.y0 = y
+            }
+        },
+        {
+            distance: (x: number, y: number) => distance(x, y,
+                this.x1 * 0.5 + 0.25 * (this.x0 + this.x2),
+                this.y1 * 0.5 + 0.25 * (this.y0 + this.y2)),
+            moveTo: (x: number, y: number) => {
+                this.x1 = 2.0 * x - 0.5 * (this.x0 + this.x2)
+                this.y1 = 2.0 * y - 0.5 * (this.y0 + this.y2)
+            }
+        },
+        {
+            distance: (x: number, y: number) => distance(x, y, this.x2, this.y2),
+            moveTo: (x: number, y: number) => {
+                this.x2 = x
+                this.y2 = y
+            }
+        }]
 
     private advanceDistance(t: number, ray: Ray): number {
         const nx = t * (this.x0 - 2.0 * this.x1 + this.x2) - this.x0 + this.x1
@@ -501,8 +525,6 @@ export class ArcObstacle implements Obstacle {
 }
 
 export class QBezierObstacle implements Obstacle {
-    readonly dragHandlers: ReadonlyArray<DragHandler> = []
-
     private readonly evaluator: QBezierEvaluator = new QBezierEvaluator()
 
     constructor(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number) {
@@ -524,4 +546,6 @@ export class QBezierObstacle implements Obstacle {
     paintHandler(context: CanvasRenderingContext2D, scale: number) {
         this.evaluator.paintHandler(context, scale)
     }
+
+    readonly dragHandlers: ReadonlyArray<DragHandler> = this.evaluator.dragHandlers
 }

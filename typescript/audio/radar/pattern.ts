@@ -1,13 +1,12 @@
 import {TAU} from "../../lib/math.js"
 import {Obstacle, OutlineEvaluator} from "./obstacles.js"
-import {Point, Ray} from "./ray.js"
+import {Ray} from "./ray.js"
 
 export enum Reflection {
     None, Obstacle, Outline
 }
 
 export class Pattern {
-    private static MaxIterations: number = 250
     private static Outline = new OutlineEvaluator()
 
     private readonly obstacles: Obstacle[] = [Pattern.Outline]
@@ -27,24 +26,14 @@ export class Pattern {
     }
 
     evaluate(ray: Ray): number {
-        let count = 0
-        while (this.step(ray)) {
-            if (++count > Pattern.MaxIterations) {
-                break
-            }
+        while (this.step(ray) && !ray.moveExceeded()) {
         }
         const position = ray.angle() / TAU
         return position - Math.floor(position)
     }
 
-    * trace(ray: Ray): Generator<Readonly<Point> | null> {
-        let count = 0
-        while (this.step(ray) === Reflection.Obstacle) {
-            if (++count === Pattern.MaxIterations) {
-                console.warn(`Max iteration reached ${count}!`)
-                yield null
-                return
-            }
+    * trace(ray: Ray): Generator<Readonly<Ray>> {
+        while (this.step(ray) === Reflection.Obstacle && !ray.moveExceeded()) {
             yield ray
         }
         yield ray
@@ -64,7 +53,7 @@ export class Pattern {
             return Reflection.None
         }
         ray.move(closestDistance)
-        if(closestObstacle === Pattern.Outline) {
+        if (closestObstacle === Pattern.Outline) {
             ray.burst()
             return Reflection.Outline
         }

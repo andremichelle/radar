@@ -54,25 +54,22 @@ export class Renderer {
     }
 
     static renderRayTrail(context: CanvasRenderingContext2D, pattern: Pattern, ray: Ray, waveformWidth: number): void {
-        context.beginPath()
-        context.moveTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
-        let exceed = false
-        const iterator: Generator<Readonly<Point> | null> = pattern.trace(ray)
-        // TODO boolean on ray? exhausted on max iterations? Readonly<Ray> ?
-        for (const point of iterator) {
-            if (point === null) {
-                exceed = true
-                break
-            }
-            context.lineTo(point.x * Renderer.Radius, point.y * Renderer.Radius)
-        }
         context.lineWidth = 0.0
         context.lineCap = 'round'
         context.lineJoin = 'round'
         context.strokeStyle = RayTrailStyle
+        context.beginPath()
+        context.moveTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
+        const iterator: Generator<Readonly<Ray>> = pattern.trace(ray)
+        for (const ray of iterator) {
+            context.lineTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
+            if (ray.moveExceeded()) {
+                context.stroke()
+                return
+            }
+        }
         context.stroke()
-        if (exceed) return
-
+        
         context.beginPath()
         context.moveTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
         ray.move(waveformWidth / Renderer.Diameter)

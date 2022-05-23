@@ -10,7 +10,6 @@ import {HTML} from "./lib/dom.js"
 /**
  * TODO
  * [ ] On max iteration exceeded, use the last ray-position and atan2 => wave-position
- * [ ] QBezier Dragging
  * [ ] Create / Delete shapes
  * [ ] loop bpm / duration in bars
  * [ ] Time-stretcher with transient duration detection

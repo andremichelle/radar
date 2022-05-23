@@ -3,24 +3,31 @@ export interface Point {
     y: number
 }
 
-export class Ray implements Point {
+/**
+ * Special ray implementation whereas origin is always inside a unit circle
+ */
+export class Ray {
+    static readonly MaxMovements: number = 250
+
     x: number = 0.0
     y: number = 0.0
     vx: number = 0.0
     vy: number = 0.0
+    moveCounts: number = 0
 
     /**
      * @param angle zero is upwards, positive counter-clock wise
-     * @param x x position in circle [-1, +1]
-     * @param y y position in circle [-1, +1]
+     * @param x x position in circle
+     * @param y y position in circle
      */
     reuse(angle: number, x: number = 0.0, y: number = 0.0): this {
-        console.assert(Math.sqrt(x * x + y * y) < 1.0)
         this.x = x
         this.y = y
+        this.assertInsideUnitCircle()
         this.vx = Math.sin(angle)
         this.vy = -Math.cos(angle)
         this.normalize()
+        this.moveCounts = 0
         return this
     }
 
@@ -28,6 +35,12 @@ export class Ray implements Point {
         console.assert(dt >= 0.0)
         this.x += this.vx * dt
         this.y += this.vy * dt
+        this.assertInsideUnitCircle()
+        this.moveCounts++
+    }
+
+    moveExceeded(): boolean {
+        return this.moveCounts >= Ray.MaxMovements
     }
 
     reflect(nx: number, ny: number): void {
@@ -63,5 +76,13 @@ export class Ray implements Point {
         this.vx = this.x
         this.vy = this.y
         this.normalize()
+    }
+
+    assertInsideUnitCircle(): void {
+        //console.assert(Math.sqrt(this.x * this.x + this.y * this.y) <= 1.0)
+        const l = Math.sqrt(this.x * this.x + this.y * this.y)
+        if(l > 1.0) {
+            // TODO console.warn(l) exceeds at the end. Can we fix this?
+        }
     }
 }
