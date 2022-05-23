@@ -15,13 +15,14 @@ const Epsilon: number = 1.0001
  * Special ray implementation whereas origin is always inside a unit circle
  */
 export class Ray {
-    static readonly MaxMovements: number = 250
+    static readonly MaxMovements: number = 25
 
     x: number = 0.0
     y: number = 0.0
     vx: number = 0.0
     vy: number = 0.0
     moveCounts: number = 0
+    lastAngle: number = 0.0
 
     /**
      * @param angle zero is upwards, positive counter-clock wise
@@ -41,17 +42,22 @@ export class Ray {
 
     * trace(obstacles: ReadonlyArray<Obstacle>): Generator<Readonly<Ray>> {
         while (this.step(obstacles) === Touch.Obstacle) {
+            if (this.moveExceeded()) {
+                this.x = Math.sin(this.lastAngle)
+                this.y = -Math.cos(this.lastAngle)
+                return this
+            }
             yield this
-            if (this.moveExceeded()) break
         }
+        this.lastAngle = this.angle()
         yield this
     }
 
     eval(obstacles: ReadonlyArray<Obstacle>): number {
         while (this.step(obstacles) === Touch.Obstacle) {
-            if (this.moveExceeded()) break
+            if (this.moveExceeded()) return this.lastAngle
         }
-        return Math.atan2(this.x, -this.y)
+        return this.lastAngle = this.angle()
     }
 
     step(obstacles: ReadonlyArray<Obstacle>): Touch {
@@ -102,6 +108,10 @@ export class Ray {
 
     length(): number {
         return Math.sqrt(this.vx * this.vx + this.vy * this.vy)
+    }
+
+    angle() {
+        return Math.atan2(this.x, -this.y)
     }
 
     dot(): number {

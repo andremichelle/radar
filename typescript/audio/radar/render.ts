@@ -53,7 +53,7 @@ export class Renderer {
             })
     }
 
-    static renderRayTrail(context: CanvasRenderingContext2D, pattern: Pattern, ray: Ray): boolean {
+    static renderRayTrail(context: CanvasRenderingContext2D, pattern: Pattern, ray: Ray): void {
         context.lineWidth = 0.0
         context.lineCap = 'round'
         context.lineJoin = 'round'
@@ -63,15 +63,15 @@ export class Renderer {
         const iterator: Generator<Readonly<Ray>> = ray.trace(pattern.getObstacles())
         for (const ray of iterator) {
             context.lineTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
-            context.stroke()
             if (ray.moveExceeded()) {
-                return false
+                context.stroke()
+                return
             }
         }
-        return true
+        context.stroke()
     }
 
-    static renderWaveformPosition(context: CanvasRenderingContext2D, angle: number, width: number): void {
+    static renderWaveformPosition(context: CanvasRenderingContext2D, angle: number, width: number, lineWidth: number = 1.0): void {
         const r0 = Renderer.Radius
         const r1 = r0 + width
         const xAxis = Math.sin(angle)
@@ -79,7 +79,7 @@ export class Renderer {
         context.beginPath()
         context.moveTo(xAxis * r0, yAxis * r0)
         context.lineTo(xAxis * r1, yAxis * r1)
-        context.lineWidth = 1.0
+        context.lineWidth = lineWidth
         context.strokeStyle = WaveformPositionStyle
         context.stroke()
     }

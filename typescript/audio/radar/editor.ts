@@ -91,15 +91,15 @@ export class Editor {
         Renderer.renderRadarOutline(context, Editor.Radius)
         Renderer.renderRayOrigin(context, this.origin)
         this.pattern.ifPresent(pattern => {
+            const ray = Editor.Ray.reuse(this.position * TAU, this.origin.x, this.origin.y)
+            Renderer.renderObstacles(context, pattern)
+            Renderer.renderRayTrail(context, pattern, ray)
+            Renderer.renderWaveformPosition(context, ray.angle(), Editor.WaveformWidth)
+
+            // TODO remove. it just validates the result
             {
                 const ray = Editor.Ray.reuse(this.position * TAU, this.origin.x, this.origin.y)
-                Renderer.renderObstacles(context, pattern)
-                Renderer.renderRayTrail(context, pattern, ray)
-            }
-            {
-                const ray = Editor.Ray.reuse(this.position * TAU, this.origin.x, this.origin.y)
-                const angle = ray.eval(pattern.getObstacles())
-                Renderer.renderWaveformPosition(context, angle, Editor.WaveformWidth)
+                Renderer.renderWaveformPosition(context, ray.eval(pattern.getObstacles()), Editor.WaveformWidth / 3, 3)
             }
         })
         context.restore()
