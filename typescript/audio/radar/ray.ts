@@ -15,7 +15,7 @@ const Epsilon: number = 1.0001
  * Special ray implementation whereas origin is always inside a unit circle
  */
 export class Ray {
-    static readonly MaxMovements: number = 25
+    static readonly MaxMovements: number = 250
 
     x: number = 0.0
     y: number = 0.0
@@ -45,6 +45,13 @@ export class Ray {
             if (this.moveExceeded()) break
         }
         yield this
+    }
+
+    eval(obstacles: ReadonlyArray<Obstacle>): number {
+        while (this.step(obstacles) === Touch.Obstacle) {
+            if (this.moveExceeded()) break
+        }
+        return Math.atan2(this.x, -this.y)
     }
 
     step(obstacles: ReadonlyArray<Obstacle>): Touch {

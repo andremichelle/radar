@@ -1,13 +1,8 @@
 import {TAU} from "../../lib/math.js"
+import {distance, DragHandler} from "./dragging.js"
 import {Ray} from "./ray.js"
 
 export type Obstacle = Evaluator
-
-export interface DragHandler {
-    distance(x: number, y: number): number
-
-    moveTo(x: number, y: number): void
-}
 
 interface Evaluator {
     capture(ray: Ray): number
@@ -24,12 +19,6 @@ interface Evaluator {
 }
 
 const Epsilon: number = 0.00001
-
-const distance = (x0: number, y0: number, x1: number, y1: number): number => {
-    const dx = x1 - x0
-    const dy = y1 - y0
-    return Math.sqrt(dx * dx + dy * dy)
-}
 
 const drawHandler = (context: CanvasRenderingContext2D, x: number, y: number, scale: number): void => {
     context.beginPath()

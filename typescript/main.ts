@@ -2,21 +2,18 @@ import {LimiterWorklet} from "./audio/limiter/worklet.js"
 import {MeterWorklet} from "./audio/meter/worklet.js"
 import {MetronomeWorklet} from "./audio/metronome/worklet.js"
 import {Editor} from "./audio/radar/editor.js"
-import {ArcObstacle, LineObstacle, QBezierObstacle} from "./audio/radar/obstacles.js"
+import {ArcObstacle, QBezierObstacle} from "./audio/radar/obstacles.js"
 import {Pattern} from "./audio/radar/pattern.js"
 import {Boot, newAudioContext, preloadImagesOfCssFile} from "./lib/boot.js"
 import {HTML} from "./lib/dom.js"
 
 /**
  * TODO
- * [ ] Move origin
- * [ ] On max iteration exceeded, use the last ray-position and atan2 => wave-position
  * [ ] Create / Delete shapes
  * [ ] loop bpm / duration in bars
  * [ ] Time-stretcher with transient duration detection
  * [ ] Editor snapping
  */
-
 
 const showProgress = (() => {
     const progress: SVGSVGElement = document.querySelector("svg.preloader")
