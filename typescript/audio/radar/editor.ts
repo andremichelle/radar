@@ -8,8 +8,8 @@ import {Renderer} from "./render.js"
 
 export class Editor {
     private static Evaluator: Ray = new Ray()
-    private static WaveformWidth: number = 96
-    private static Size: number = Renderer.Diameter + Editor.WaveformWidth
+    private static WaveformWidth: number = 48
+    private static Size: number = Renderer.Diameter + Editor.WaveformWidth * 2
     private static Radius: number = Editor.Size / 2
     private static CaptureRadius = 4.0 / Renderer.Radius
 
@@ -24,6 +24,7 @@ export class Editor {
     private waveform: Option<ImageBitmap> = Options.None
 
     private position: number = 0.0
+    private lastValidPosition: number = 0.0
 
     constructor() {
         this.canvas.addEventListener('mousedown', event => {
@@ -44,7 +45,7 @@ export class Editor {
                 }
             })
         })
-        this.update()
+        requestAnimationFrame(this.update)
     }
 
     globalToLocal(x: number, y: number): Point {
@@ -93,7 +94,13 @@ export class Editor {
         this.pattern.ifPresent(pattern => {
             const ray = Editor.Evaluator.reuse(this.position * TAU, this.origin.x, this.origin.y)
             Renderer.renderObstacles(context, pattern)
-            Renderer.renderRayTrail(context, pattern, ray, Editor.WaveformWidth)
+            const validPath = Renderer.renderRayTrail(context, pattern, ray)
+            if (validPath) {
+                Renderer.renderWaveformPosition(context, this.position * TAU, Editor.WaveformWidth)
+                this.lastValidPosition = this.position
+            } else {
+                Renderer.renderWaveformPosition(context, this.lastValidPosition * TAU, Editor.WaveformWidth)
+            }
         })
         context.restore()
 

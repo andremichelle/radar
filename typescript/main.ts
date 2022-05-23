@@ -9,12 +9,14 @@ import {HTML} from "./lib/dom.js"
 
 /**
  * TODO
+ * [ ] Move origin
  * [ ] On max iteration exceeded, use the last ray-position and atan2 => wave-position
  * [ ] Create / Delete shapes
  * [ ] loop bpm / duration in bars
  * [ ] Time-stretcher with transient duration detection
  * [ ] Editor snapping
  */
+
 
 const showProgress = (() => {
     const progress: SVGSVGElement = document.querySelector("svg.preloader")

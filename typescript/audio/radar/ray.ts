@@ -1,13 +1,21 @@
+import {Obstacle} from "./obstacles.js"
+
 export interface Point {
     x: number
     y: number
 }
 
+export enum Touch {
+    Obstacle, Last
+}
+
+const Epsilon: number = 1.0001
+
 /**
  * Special ray implementation whereas origin is always inside a unit circle
  */
 export class Ray {
-    static readonly MaxMovements: number = 250
+    static readonly MaxMovements: number = 25
 
     x: number = 0.0
     y: number = 0.0
@@ -29,6 +37,35 @@ export class Ray {
         this.normalize()
         this.moveCounts = 0
         return this
+    }
+
+    * trace(obstacles: ReadonlyArray<Obstacle>): Generator<Readonly<Ray>> {
+        while (this.step(obstacles) === Touch.Obstacle) {
+            yield this
+            if (this.moveExceeded()) break
+        }
+        yield this
+    }
+
+    step(obstacles: ReadonlyArray<Obstacle>): Touch {
+        let closestObstacle: Obstacle = null
+        let closestDistance = Number.MAX_VALUE
+        obstacles.forEach(modifier => {
+            const distance = modifier.capture(this)
+            if (distance > 0.0 && distance < closestDistance) {
+                closestObstacle = modifier
+                closestDistance = distance
+            }
+        })
+        if (closestObstacle === null) {
+            throw new Error('No reflection')
+        }
+        this.move(closestDistance)
+        if (closestObstacle.isBoundary()) {
+            return Touch.Last
+        }
+        closestObstacle.reflect(this)
+        return Touch.Obstacle
     }
 
     move(dt: number): void {
@@ -68,21 +105,8 @@ export class Ray {
         return this.x * this.vy - this.y * this.vx
     }
 
-    angle(): number {
-        return Math.atan2(this.y, this.x)
-    }
-
-    burst(): void {
-        this.vx = this.x
-        this.vy = this.y
-        this.normalize()
-    }
-
     assertInsideUnitCircle(): void {
-        //console.assert(Math.sqrt(this.x * this.x + this.y * this.y) <= 1.0)
-        const l = Math.sqrt(this.x * this.x + this.y * this.y)
-        if(l > 1.0) {
-            // TODO console.warn(l) exceeds at the end. Can we fix this?
-        }
+        const distance = Math.sqrt(this.x * this.x + this.y * this.y)
+        console.assert(distance <= Epsilon, `Outside circle (${distance})`)
     }
 }

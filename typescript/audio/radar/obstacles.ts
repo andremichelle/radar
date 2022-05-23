@@ -18,6 +18,8 @@ interface Evaluator {
 
     paintHandler(context: CanvasRenderingContext2D, scale: number): void
 
+    isBoundary(): boolean
+
     dragHandlers: ReadonlyArray<DragHandler>
 }
 
@@ -55,6 +57,10 @@ export class OutlineEvaluator implements Evaluator {
 
     reflect(ray: Ray): void {
         // ray track is done. no reflection needed.
+    }
+
+    isBoundary(): boolean {
+        return true
     }
 }
 
@@ -105,6 +111,10 @@ class LineEvaluator implements Evaluator {
     paintHandler(context: CanvasRenderingContext2D, scale: number): void {
         drawHandler(context, this.x0, this.y0, scale)
         drawHandler(context, this.x1, this.y1, scale)
+    }
+
+    isBoundary(): boolean {
+        return false
     }
 
     readonly dragHandlers: ReadonlyArray<DragHandler> = [
@@ -230,6 +240,10 @@ class ArcEvaluator implements Evaluator {
         drawHandler(context, this.x0, this.y0, scale)
         drawHandler(context, this.x1, this.y1, scale)
         drawHandler(context, this.x2, this.y2, scale)
+    }
+
+    isBoundary(): boolean {
+        return false
     }
 
     readonly dragHandlers: ReadonlyArray<DragHandler> = [
@@ -397,6 +411,10 @@ class QBezierEvaluator implements Evaluator {
         drawHandler(context, this.x2, this.y2, scale)
     }
 
+    isBoundary(): boolean {
+        return false
+    }
+
     readonly dragHandlers: ReadonlyArray<DragHandler> = [
         {
             distance: (x: number, y: number) => distance(x, y, this.x0, this.y0),
@@ -480,6 +498,10 @@ export class LineObstacle implements Obstacle {
         this.evaluator.paintHandler(context, scale)
     }
 
+    isBoundary(): boolean {
+        return this.evaluator.isBoundary()
+    }
+
     readonly dragHandlers: ReadonlyArray<DragHandler> = this.evaluator.dragHandlers
 }
 
@@ -521,6 +543,10 @@ export class ArcObstacle implements Obstacle {
         this.evaluator.paintHandler(context, scale)
     }
 
+    isBoundary(): boolean {
+        return this.evaluator.isBoundary()
+    }
+
     readonly dragHandlers: ReadonlyArray<DragHandler> = this.arcEvaluator.dragHandlers
 }
 
@@ -545,6 +571,10 @@ export class QBezierObstacle implements Obstacle {
 
     paintHandler(context: CanvasRenderingContext2D, scale: number) {
         this.evaluator.paintHandler(context, scale)
+    }
+
+    isBoundary(): boolean {
+        return this.evaluator.isBoundary()
     }
 
     readonly dragHandlers: ReadonlyArray<DragHandler> = this.evaluator.dragHandlers

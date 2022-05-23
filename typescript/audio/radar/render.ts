@@ -53,27 +53,32 @@ export class Renderer {
             })
     }
 
-    static renderRayTrail(context: CanvasRenderingContext2D, pattern: Pattern, ray: Ray, waveformWidth: number): void {
+    static renderRayTrail(context: CanvasRenderingContext2D, pattern: Pattern, ray: Ray): boolean {
         context.lineWidth = 0.0
         context.lineCap = 'round'
         context.lineJoin = 'round'
         context.strokeStyle = RayTrailStyle
         context.beginPath()
         context.moveTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
-        const iterator: Generator<Readonly<Ray>> = pattern.trace(ray)
+        const iterator: Generator<Readonly<Ray>> = ray.trace(pattern.getObstacles())
         for (const ray of iterator) {
             context.lineTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
+            context.stroke()
             if (ray.moveExceeded()) {
-                context.stroke()
-                return
+                return false
             }
         }
-        context.stroke()
-        
+        return true
+    }
+
+    static renderWaveformPosition(context: CanvasRenderingContext2D, angle: number, width: number): void {
+        const r0 = Renderer.Radius
+        const r1 = r0 + width
+        const xAxis = Math.sin(angle)
+        const yAxis = -Math.cos(angle)
         context.beginPath()
-        context.moveTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
-        ray.move(waveformWidth / Renderer.Diameter)
-        context.lineTo(ray.x * Renderer.Radius, ray.y * Renderer.Radius)
+        context.moveTo(xAxis * r0, yAxis * r0)
+        context.lineTo(xAxis * r1, yAxis * r1)
         context.lineWidth = 1.0
         context.strokeStyle = WaveformPositionStyle
         context.stroke()
@@ -83,8 +88,7 @@ export class Renderer {
         const canvas = new OffscreenCanvas(size, size)
         const context = canvas.getContext('2d')
         const radius = size >> 1
-        const w2 = width * 0.5
-        const rr = radius - w2
+        const rr = radius - width
         const resolution = Math.floor(radius * TAU) | 0
         context.translate(radius, radius)
         context.globalCompositeOperation = 'lighter'
@@ -107,8 +111,8 @@ export class Renderer {
                 min = Math.min(min, value)
                 max = Math.max(max, value)
             }
-            const r0 = rr + Math.min(0.5, w2 * min)
-            const r1 = rr + Math.max(0.5, w2 * max)
+            const r0 = rr + Math.min(0.5, width * min)
+            const r1 = rr + Math.max(0.5, width * max)
             const angle = x / resolution * TAU
             const sn = Math.sin(angle)
             const cs = -Math.cos(angle)
