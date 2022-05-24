@@ -13,14 +13,8 @@ export class Renderer {
     static Radius: number = 256
     static Diameter: number = Renderer.Radius << 1
 
-    static renderRadarOutline(context: CanvasRenderingContext2D, diameter: number): void {
-        context.fillStyle = RadarOutlineStyle
-        context.beginPath()
-        context.arc(0.0, 0.0, diameter, 0.0, TAU, false)
-        context.arc(0.0, 0.0, Renderer.Radius, 0.0, TAU, true)
-        context.closePath()
-        context.fill()
-        context.fillStyle = 'rgba(255, 255, 255, 0.04)'
+    static renderRadarInside(context: CanvasRenderingContext2D): void {
+        context.fillStyle = 'rgba(255, 255, 255, 0.02)'
         context.beginPath()
         context.arc(0.0, 0.0, Renderer.Radius, 0.0, TAU, false)
         context.closePath()

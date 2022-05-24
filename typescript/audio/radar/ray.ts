@@ -15,7 +15,7 @@ const Epsilon: number = 1.0001
  * Special ray implementation whereas origin is always inside a unit circle
  */
 export class Ray {
-    static readonly MaxMovements: number = 25
+    static readonly MaxMovements: number = 250
 
     x: number = 0.0
     y: number = 0.0

@@ -67,11 +67,12 @@ export class Editor {
         const context = this.context
 
         context.clearRect(0.0, 0.0, canvas.width, canvas.height)
+        this.waveform.ifPresent(bitmap => context.drawImage(bitmap, 0, 0))
         context.save()
         context.scale(devicePixelRatio, devicePixelRatio)
         context.translate(Editor.Radius, Editor.Radius)
         context.lineWidth = 0.0
-        Renderer.renderRadarOutline(context, Editor.Radius)
+        Renderer.renderRadarInside(context)
         Renderer.renderRayOrigin(context, this.origin)
         this.pattern.ifPresent(pattern => {
             const ray = Editor.Ray.reuse(this.position * TAU, this.origin.x, this.origin.y)
@@ -86,8 +87,6 @@ export class Editor {
             }
         })
         context.restore()
-
-        this.waveform.ifPresent(bitmap => context.drawImage(bitmap, 0, 0))
 
         this.position += 0.001
         this.position -= Math.floor(this.position)

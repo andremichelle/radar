@@ -1,4 +1,4 @@
-import {Events, Option, Options, Terminable, Terminator} from "./common.js"
+import {ArrayUtils, Events, Option, Options, Terminable, Terminator} from "./common.js"
 
 type Attributes = {
     [name in 'textContent' | 'class' | string]: number | string | boolean
@@ -284,17 +284,15 @@ export class RenderRequest {
 }
 
 export const Colors: string[] = (() => {
-    const computedStyle = getComputedStyle(document.documentElement)
-    const colors: string[] = []
-    let index = 1
-    while(index < 10) {
-        const value = computedStyle.getPropertyValue(`--color${index++}`).trim()
-        if(value.length > 0) {
-            colors.push(value)
-        } else {
-            break
-        }
-    }
-    console.debug(`found ${colors}`)
+    const colors: string[] = ArrayUtils.fill(5, index => {
+        const phase = index / 4
+        const hue = 60 + phase * 300
+        const saturation = 15 + phase * 35
+        const brightness = 6 + phase * 66
+        return `hsl(${Math.round(hue % 360)}, ${Math.round(saturation)}%, ${Math.round(brightness)}%)`
+    })
+    colors.forEach((color, index) =>
+        document.documentElement.style.setProperty(`--color${index}`, color))
+    console.debug(`${colors}`)
     return colors
 })()
