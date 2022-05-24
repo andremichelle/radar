@@ -257,12 +257,9 @@ class ArcEvaluator implements Evaluator {
             moveTo: (x: number, y: number) => {
                 const dx = this.x1 - this.x0
                 const dy = this.y1 - this.y0
-                const dd = Math.sqrt(dx * dx + dy * dy)
-                const cx = this.x0 + dx * .5
-                const cy = this.y0 + dy * .5
-                const px = x - cx
-                const py = y - cy
-                this.bend = 2.0 * (dy / dd * px - dx / dd * py)
+                this.bend = Math.abs(dy) < Epsilon
+                    ? (2.0 * (this.y0 - y) - dy) / dx
+                    : (2.0 * (x - this.x0) - dx) / dy
                 this.update()
             }
         }]
@@ -270,12 +267,8 @@ class ArcEvaluator implements Evaluator {
     private update(): void {
         const dx = this.x1 - this.x0
         const dy = this.y1 - this.y0
-        const ln = Math.sqrt(dx * dx + dy * dy)
-        const nx = dy / ln
-        const ny = -dx / ln
-        const offset = ln * 0.5 * this.bend
-        this.x2 = this.x0 + dx * 0.5 + nx * offset
-        this.y2 = this.y0 + dy * 0.5 + ny * offset
+        this.x2 = this.x0 + 0.5 * (dx + dy * this.bend)
+        this.y2 = this.y0 + 0.5 * (dy - dx * this.bend)
         const a1 = 2.0 * (this.x2 - this.x1)
         const b1 = 0.5 / (this.y2 - this.y1)
         const a2 = 2.0 * (this.x0 - this.x1)

@@ -120,7 +120,14 @@ export class Editor {
     private beginDrag(handler: DragHandler): void {
         const onMove = (event: MouseEvent) => {
             const local = this.globalToLocal(event.clientX, event.clientY)
-            handler.moveTo(local.x, local.y)
+            const x = local.x
+            const y = local.y
+            const d = Math.sqrt(x * x + y * y)
+            if (d > 1.0) {
+                handler.moveTo(x / d, y / d)
+            } else {
+                handler.moveTo(x, y)
+            }
         }
         window.addEventListener('mousemove', onMove)
         window.addEventListener('mouseup', () =>
