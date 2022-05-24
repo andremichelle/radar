@@ -2,12 +2,12 @@ import {Events, HTMLRadioGroup, Option, Options, Terminable, TerminableVoid} fro
 import {HTML} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
 import {distance, DragHandler} from "./dragging.js"
-import {LineObstacle} from "./obstacles.js"
+import {ArcObstacle, LineObstacle, Obstacle, QBezierObstacle} from "./obstacles.js"
 import {Pattern} from "./pattern.js"
 import {Point, Ray} from "./ray.js"
 import {Renderer} from "./render.js"
 
-type Tool = 'move' | 'line' | 'circle' | 'bezier'
+type Tool = 'move' | 'line' | 'arc' | 'curve'
 
 export class Editor {
     private static Ray: Ray = new Ray()
@@ -134,22 +134,26 @@ export class Editor {
         })
     }
 
-    private installCreateLineTool(): Terminable {
+    private installCreateTool<OBSTACLE extends Obstacle>(
+        factory: (x0: number, y0: number) => OBSTACLE,
+        move: (obstacle: OBSTACLE, x0: number, y0: number, x1: number, y1: number) => void
+    ): Terminable {
         return Events.bindEventListener(this.canvas, 'mousedown', (event: MouseEvent) => {
             const {x: x0, y: y0} = this.globalToLocal(event.clientX, event.clientY)
             if (x0 * x0 + y0 * y0 > 1.0) {
                 return
             }
             this.pattern.ifPresent(pattern => {
-                const obstacle = new LineObstacle(x0, y0, x0, y0)
+                const obstacle: OBSTACLE = factory(x0, y0)
+                console.log(obstacle)
                 pattern.addObstacle(obstacle)
                 Editor.installMove((event: MouseEvent) => {
                     const {x: x1, y: y1} = this.globalToLocal(event.clientX, event.clientY)
                     const d = Math.sqrt(x1 * x1 + y1 * y1)
                     if (d > 1.0) {
-                        obstacle.set(x0, y0, x1 / d, y1 / d)
+                        move(obstacle, x0, y0, x1 / d, y1 / d)
                     } else {
-                        obstacle.set(x0, y0, x1, y1)
+                        move(obstacle, x0, y0, x1, y1)
                     }
                 })
             })
@@ -161,7 +165,23 @@ export class Editor {
             case 'move':
                 return this.installMoveTool()
             case 'line':
-                return this.installCreateLineTool()
+                return this.installCreateTool(
+                    (x0: number, y0: number) => new LineObstacle(x0, y0, x0, y0),
+                    (obstacle, x0, y0, x1, y1) =>
+                        obstacle.set(x0, y0, x1, y1)
+                )
+            case 'arc':
+                return this.installCreateTool(
+                    (x0: number, y0: number) => new ArcObstacle(x0, y0, x0, y0, 1.0),
+                    (obstacle, x0, y0, x1, y1) =>
+                        obstacle.set(x0, y0, x1, y1, 1.0)
+                )
+            case 'curve':
+                return this.installCreateTool(
+                    (x0: number, y0: number) => new QBezierObstacle(x0, y0, x0, y0, x0, y0),
+                    (obstacle, x0, y0, x1, y1) =>
+                        obstacle.set(x0, y0, (x0 + x1) / 2.0, (y0 + y1) / 2.0, x1, y1)
+                )
             default:
                 return TerminableVoid
         }

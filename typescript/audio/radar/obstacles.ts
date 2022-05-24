@@ -238,29 +238,21 @@ class ArcEvaluator implements Evaluator {
     readonly dragHandlers: ReadonlyArray<DragHandler> = [
         {
             distance: (x: number, y: number) => distance(x, y, this.x0, this.y0),
-            moveTo: (x: number, y: number) => {
-                this.x0 = x
-                this.y0 = y
-                this.update()
-            }
+            moveTo: (x: number, y: number) => this.set(x, y, this.x1, this.y1, this.bend)
         },
         {
             distance: (x: number, y: number) => distance(x, y, this.x1, this.y1),
-            moveTo: (x: number, y: number) => {
-                this.x1 = x
-                this.y1 = y
-                this.update()
-            }
+            moveTo: (x: number, y: number) => this.set(this.x0, this.y0, x, y, this.bend)
         },
         {
             distance: (x: number, y: number) => distance(x, y, this.x2, this.y2),
             moveTo: (x: number, y: number) => {
                 const dx = this.x1 - this.x0
                 const dy = this.y1 - this.y0
-                this.bend = Math.abs(dy) < Epsilon
+                const bend = Math.abs(dy) < Epsilon
                     ? (2.0 * (this.y0 - y) - dy) / dx
                     : (2.0 * (x - this.x0) - dx) / dy
-                this.update()
+                this.set(this.x0, this.y0, this.x1, this.y1, bend)
             }
         }]
 
@@ -481,14 +473,14 @@ export class LineObstacle implements Obstacle {
     }
 
     isBoundary(): boolean {
-        return this.evaluator.isBoundary()
+        return false
     }
 
     readonly dragHandlers: ReadonlyArray<DragHandler> = this.evaluator.dragHandlers
 }
 
 export class ArcObstacle implements Obstacle {
-    private static LineModeTolerance: number = 0.01
+    private static LineModeTolerance: number = 0.001
 
     private readonly lineEvaluator: LineEvaluator = new LineEvaluator()
     private readonly arcEvaluator: ArcEvaluator = new ArcEvaluator()
@@ -500,11 +492,11 @@ export class ArcObstacle implements Obstacle {
     }
 
     set(x0: number, y0: number, x1: number, y1: number, bend: number): void {
+        this.lineEvaluator.set(x0, y0, x1, y1)
+        this.arcEvaluator.set(x0, y0, x1, y1, bend)
         if (bend > -ArcObstacle.LineModeTolerance && bend < ArcObstacle.LineModeTolerance) {
-            this.lineEvaluator.set(x0, y0, x1, y1)
             this.evaluator = this.lineEvaluator
         } else {
-            this.arcEvaluator.set(x0, y0, x1, y1, bend)
             this.evaluator = this.arcEvaluator
         }
     }
@@ -521,12 +513,12 @@ export class ArcObstacle implements Obstacle {
         this.evaluator.paintPath(context, scale)
     }
 
-    paintHandler(context: CanvasRenderingContext2D, scale: number) {
-        this.evaluator.paintHandler(context, scale)
+    paintHandler(context: CanvasRenderingContext2D, scale: number): void {
+        this.arcEvaluator.paintHandler(context, scale)
     }
 
     isBoundary(): boolean {
-        return this.evaluator.isBoundary()
+        return false
     }
 
     readonly dragHandlers: ReadonlyArray<DragHandler> = this.arcEvaluator.dragHandlers
@@ -536,6 +528,10 @@ export class QBezierObstacle implements Obstacle {
     private readonly evaluator: QBezierEvaluator = new QBezierEvaluator()
 
     constructor(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number) {
+        this.set(x0, y0, x1, y1, x2, y2)
+    }
+
+    set(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number) {
         this.evaluator.set(x0, y0, x1, y1, x2, y2)
     }
 
@@ -556,7 +552,7 @@ export class QBezierObstacle implements Obstacle {
     }
 
     isBoundary(): boolean {
-        return this.evaluator.isBoundary()
+        return false
     }
 
     readonly dragHandlers: ReadonlyArray<DragHandler> = this.evaluator.dragHandlers

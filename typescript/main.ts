@@ -39,7 +39,7 @@ const showProgress = (() => {
     // --- BOOT ENDS ---
 
     const pattern = new Pattern()
-    pattern.addObstacle(new LineObstacle(-0.8, -0.5, 0.8, -0.5))
+    // pattern.addObstacle(new LineObstacle(-0.8, -0.5, 0.8, -0.5))
     // pattern.addObstacle(new ArcObstacle(-0.25, 0.5, 0.5, 0.5, 1.3))
     // pattern.addObstacle(new ArcObstacle(0.25, -0.5, 0.25, 0.5, 1.3))
     // pattern.addObstacle(new QBezierObstacle(-0.5, 0.25, 0.25, -0.5, 0.5, 0.25))
