@@ -1,4 +1,4 @@
-import {Option, Options} from "../../lib/common.js"
+import {Events, Option, Options, Terminable} from "../../lib/common.js"
 import {HTML} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
 import {distance, DragHandler} from "./dragging.js"
@@ -35,25 +35,8 @@ export class Editor {
     private position: number = 0.0
 
     constructor() {
-        this.canvas.addEventListener('mousedown', event => {
-            const local = this.globalToLocal(event.clientX, event.clientY)
-            this.pattern.ifPresent(pattern => {
-                const handler: DragHandler | null = pattern
-                    .getObstacles()
-                    .flatMap(obstacle => obstacle.dragHandlers)
-                    .concat(this.dragHandlers)
-                    .reduce((prev: DragHandler, next: DragHandler) => {
-                        const distance = next.distance(local.x, local.y)
-                        if (prev === null) {
-                            return distance < Editor.CaptureRadius ? next : null
-                        }
-                        return distance < prev.distance(local.x, local.y) ? next : prev
-                    }, null)
-                if (handler !== null) {
-                    this.beginDrag(handler)
-                }
-            })
-        })
+        this.installDragHandler() // TODO create this for all tools
+
         requestAnimationFrame(this.update)
     }
 
@@ -110,6 +93,28 @@ export class Editor {
         this.position -= Math.floor(this.position)
 
         requestAnimationFrame(this.update)
+    }
+
+    private installDragHandler(): Terminable {
+        return Events.bindEventListener(this.canvas, 'mousedown', (event: MouseEvent) => {
+            const local = this.globalToLocal(event.clientX, event.clientY)
+            this.pattern.ifPresent(pattern => {
+                const handler: DragHandler | null = pattern
+                    .getObstacles()
+                    .flatMap(obstacle => obstacle.dragHandlers)
+                    .concat(this.dragHandlers)
+                    .reduce((prev: DragHandler, next: DragHandler) => {
+                        const distance = next.distance(local.x, local.y)
+                        return prev === null
+                            ? distance < Editor.CaptureRadius
+                                ? next : null : distance < prev.distance(local.x, local.y)
+                                ? next : prev
+                    }, null)
+                if (handler !== null) {
+                    this.beginDrag(handler)
+                }
+            })
+        })
     }
 
     private beginDrag(handler: DragHandler): void {
