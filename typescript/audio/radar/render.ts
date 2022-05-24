@@ -3,7 +3,7 @@ import {TAU} from "../../lib/math.js"
 import {Pattern} from "./pattern.js"
 import {Point, Ray} from "./ray.js"
 
-const RadarOutlineStyle = Colors[0]
+const RadarOriginStyle = Colors[1]
 const ObstacleStyle = Colors[2]
 const RayTrailStyle = Colors[3]
 const WaveformStyle = Colors[1]
@@ -23,7 +23,7 @@ export class Renderer {
     }
 
     static renderRayOrigin(context: CanvasRenderingContext2D, origin: Point): void {
-        context.strokeStyle = RadarOutlineStyle
+        context.strokeStyle = RadarOriginStyle
         context.lineWidth = 0.0
         context.beginPath()
         context.arc(origin.x * Renderer.Radius, origin.y * Renderer.Radius, 7, 0.0, TAU, false)

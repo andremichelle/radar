@@ -1,10 +1,13 @@
-import {Events, Option, Options, Terminable} from "../../lib/common.js"
+import {Events, HTMLRadioGroup, Option, Options, Terminable, TerminableVoid} from "../../lib/common.js"
 import {HTML} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
 import {distance, DragHandler} from "./dragging.js"
+import {LineObstacle} from "./obstacles.js"
 import {Pattern} from "./pattern.js"
 import {Point, Ray} from "./ray.js"
 import {Renderer} from "./render.js"
+
+type Tool = 'move' | 'line' | 'circle' | 'bezier'
 
 export class Editor {
     private static Ray: Ray = new Ray()
@@ -29,13 +32,18 @@ export class Editor {
         }
     }]
 
+    private tool: Option<Terminable> = Options.None
     private pattern: Option<Pattern> = Options.None
     private waveform: Option<ImageBitmap> = Options.None
 
     private position: number = 0.0
 
     constructor() {
-        this.installDragHandler() // TODO create this for all tools
+        const toolGroup = new HTMLRadioGroup(HTML.query('[data-component=tools]'), 'tool')
+        toolGroup.addObserver(tool => {
+            this.tool.ifPresent(tool => tool.terminate())
+            this.tool = Options.valueOf(this.switchTool(tool as Tool))
+        }, true)
 
         requestAnimationFrame(this.update)
     }
@@ -88,13 +96,13 @@ export class Editor {
         })
         context.restore()
 
-        this.position += 0.001
+        this.position += 0.002
         this.position -= Math.floor(this.position)
 
         requestAnimationFrame(this.update)
     }
 
-    private installDragHandler(): Terminable {
+    private installMoveTool(): Terminable {
         return Events.bindEventListener(this.canvas, 'mousedown', (event: MouseEvent) => {
             const local = this.globalToLocal(event.clientX, event.clientY)
             this.pattern.ifPresent(pattern => {
@@ -110,26 +118,58 @@ export class Editor {
                                 ? next : prev
                     }, null)
                 if (handler !== null) {
-                    this.beginDrag(handler)
+                    Editor.installMove((event: MouseEvent) => {
+                        const local = this.globalToLocal(event.clientX, event.clientY)
+                        const x = local.x
+                        const y = local.y
+                        const d = Math.sqrt(x * x + y * y)
+                        if (d > 1.0) {
+                            handler.moveTo(x / d, y / d)
+                        } else {
+                            handler.moveTo(x, y)
+                        }
+                    })
                 }
             })
         })
     }
 
-    private beginDrag(handler: DragHandler): void {
-        const onMove = (event: MouseEvent) => {
-            const local = this.globalToLocal(event.clientX, event.clientY)
-            const x = local.x
-            const y = local.y
-            const d = Math.sqrt(x * x + y * y)
-            if (d > 1.0) {
-                handler.moveTo(x / d, y / d)
-            } else {
-                handler.moveTo(x, y)
+    private installCreateLineTool(): Terminable {
+        return Events.bindEventListener(this.canvas, 'mousedown', (event: MouseEvent) => {
+            const {x: x0, y: y0} = this.globalToLocal(event.clientX, event.clientY)
+            if (x0 * x0 + y0 * y0 > 1.0) {
+                return
             }
+            this.pattern.ifPresent(pattern => {
+                const obstacle = new LineObstacle(x0, y0, x0, y0)
+                pattern.addObstacle(obstacle)
+                Editor.installMove((event: MouseEvent) => {
+                    const {x: x1, y: y1} = this.globalToLocal(event.clientX, event.clientY)
+                    const d = Math.sqrt(x1 * x1 + y1 * y1)
+                    if (d > 1.0) {
+                        obstacle.set(x0, y0, x1 / d, y1 / d)
+                    } else {
+                        obstacle.set(x0, y0, x1, y1)
+                    }
+                })
+            })
+        })
+    }
+
+    private switchTool(tool: Tool): Terminable {
+        switch (tool) {
+            case 'move':
+                return this.installMoveTool()
+            case 'line':
+                return this.installCreateLineTool()
+            default:
+                return TerminableVoid
         }
-        window.addEventListener('mousemove', onMove)
+    }
+
+    private static installMove(move: (event: MouseEvent) => void) {
+        window.addEventListener('mousemove', move)
         window.addEventListener('mouseup', () =>
-            window.removeEventListener('mousemove', onMove), {once: true})
+            window.removeEventListener('mousemove', move), {once: true})
     }
 }

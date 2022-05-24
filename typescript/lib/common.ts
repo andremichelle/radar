@@ -507,7 +507,10 @@ export class HTMLRadioGroup implements ObservableValue<string> {
             .map((input: HTMLInputElement) => input.value)
     }
 
-    addObserver(observer: Observer<string>): Terminable {
+    addObserver(observer: Observer<string>, notify?: boolean): Terminable {
+        if (notify) {
+            observer(this.get())
+        }
         return this.observable.addObserver(observer)
     }
 

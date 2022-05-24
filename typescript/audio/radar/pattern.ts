@@ -5,12 +5,12 @@ export class Pattern {
 
     private readonly obstacles: Obstacle[] = [Pattern.Outline]
 
-    addObstacle(modifier: Obstacle): void {
-        this.obstacles.push(modifier)
+    addObstacle(obstacle: Obstacle): void {
+        this.obstacles.push(obstacle)
     }
 
-    removeObstacle(modifier: Obstacle): void {
-        const indexOf = this.obstacles.indexOf(modifier)
+    removeObstacle(obstacle: Obstacle): void {
+        const indexOf = this.obstacles.indexOf(obstacle)
         console.assert(-1 !== indexOf)
         this.obstacles.splice(indexOf, 1)
     }
