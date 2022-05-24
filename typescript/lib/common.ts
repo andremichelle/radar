@@ -468,3 +468,54 @@ export class Events {
         return {terminate: () => target.removeEventListener(type, listener, options)}
     }
 }
+
+export class HTMLRadioGroup implements ObservableValue<string> {
+    private readonly terminator: Terminator = new Terminator()
+    private readonly observable: ObservableImpl<string> = this.terminator.with(new ObservableImpl<string>())
+
+    constructor(private readonly form: HTMLFormElement, private readonly name: string) {
+        this.terminator.with(Events.bindEventListener(this.form, 'change', (event: Event): void => {
+            if (event.target instanceof HTMLInputElement) {
+                this.observable.notify(event.target.value)
+            }
+        }))
+    }
+
+    set(value: string): boolean {
+        const element: HTMLInputElement = this.form.querySelector(`input[type=radio][name=${this.name}][value=${value}]`)
+        if (element === null) {
+            throw new Error(`value not found in ${this.form}`)
+        }
+        if (element.checked) {
+            return false
+        }
+        element.checked = true
+        this.observable.notify(value)
+        return true
+    }
+
+    get(): string {
+        const element: HTMLInputElement = this.form.querySelector(`input[type=radio][name=${this.name}]:checked`)
+        if (element === null) {
+            throw new Error(`value not found in ${this.form}`)
+        }
+        return element.value
+    }
+
+    values(): string[] {
+        return Array.from(this.form.querySelectorAll(`input[type=radio][name=${this.name}]`))
+            .map((input: HTMLInputElement) => input.value)
+    }
+
+    addObserver(observer: Observer<string>): Terminable {
+        return this.observable.addObserver(observer)
+    }
+
+    removeObserver(observer: Observer<string>): boolean {
+        return this.observable.removeObserver(observer)
+    }
+
+    terminate(): void {
+        this.terminator.terminate()
+    }
+}

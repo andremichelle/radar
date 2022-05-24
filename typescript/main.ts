@@ -5,6 +5,7 @@ import {Editor} from "./audio/radar/editor.js"
 import {ArcObstacle, QBezierObstacle} from "./audio/radar/obstacles.js"
 import {Pattern} from "./audio/radar/pattern.js"
 import {Boot, newAudioContext, preloadImagesOfCssFile} from "./lib/boot.js"
+import {HTMLRadioGroup} from "./lib/common.js"
 import {HTML} from "./lib/dom.js"
 
 /**
@@ -51,6 +52,11 @@ const showProgress = (() => {
         .then(result => result.arrayBuffer())
         .then(buffer => context.decodeAudioData(buffer))
     editor.showAudioBuffer(buffer)
+
+    const form: HTMLFormElement = HTML.query('[data-component=tools]')
+    const tools = new HTMLRadioGroup(form, 'tool')
+    tools.addObserver(tool => console.log(`changed to '${tool}'`))
+    console.log(`current tool: '${tools.get()}'`)
 
     // prevent dragging entire document on mobile
     document.addEventListener('touchmove', (event: TouchEvent) => event.preventDefault(), {passive: false})
