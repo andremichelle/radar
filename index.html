@@ -18,7 +18,56 @@
     <script src="./bin/main.js" type="module"></script>
 </head>
 <body>
-<main class="invisible"></main>
+<svg xmlns="http://www.w3.org/2000/svg" display="none">
+    <defs>
+        <symbol id="move" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+            <path stroke="none" fill="currentColor"
+                  d="m130.412 323.98-51.883-51.882H240v161.47l-51.882-51.881-22.628 22.626 90.51 90.51 90.51-90.51-22.628-22.626L272 433.568v-161.47h160.667l-51.883 51.882 22.628 22.627 90.509-90.509-90.509-90.51-22.628 22.627 51.883 51.883H272V79.432l51.882 51.881 22.628-22.626L256 18.177l-90.51 90.51 22.628 22.626L240 79.432v160.666H78.529l51.883-51.883-22.628-22.627-90.51 90.51 90.511 90.51 22.627-22.628z"/>
+        </symbol>
+        <symbol id="line" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+            <line stroke="currentColor" stroke-width="20" fill="none" x1="64" y1="448" x2="448" y2="64"/>
+        </symbol>
+        <symbol id="circle" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+            <circle stroke="currentColor" stroke-width="20" fill="none" cx="256" cy="256" r="224"/>
+        </symbol>
+        <svg id="curve" viewBox="16 12 48 56" xmlns="http://www.w3.org/2000/svg">
+            <path stroke="currentColor" stroke-width="2" fill="none"
+                  d="M58 18s-25 6-25 15 13 8 13 12-24 10-28 11l1 3s30-6 30-14-13-5-13-12 23-12 23-12l-1-3Z"/>
+        </svg>
+    </defs>
+</svg>
+<main class="invisible">
+    <div class="editor">
+        <div class="radar">
+            <form class="tools">
+                <label>
+                    <input type="radio" name="tool" value="move" checked>
+                    <svg>
+                        <use href="#move"></use>
+                    </svg>
+                </label>
+                <label>
+                    <input type="radio" name="tool" value="line">
+                    <svg>
+                        <use href="#line"></use>
+                    </svg>
+                </label>
+                <label>
+                    <input type="radio" name="tool" value="circle">
+                    <svg>
+                        <use href="#circle"></use>
+                    </svg>
+                </label>
+                <label>
+                    <input type="radio" name="tool" value="curve">
+                    <svg>
+                        <use href="#curve"></use>
+                    </svg>
+                </label>
+            </form>
+        </div>
+    </div>
+</main>
 <svg class="preloader" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
     <circle r="7" cx="10" cy="10" fill="none" stroke="#21242D" stroke-width="5"></circle>
     <circle r="7" cx="10" cy="10" fill="none" stroke="#666D91" stroke-width="5" class="progress"></circle>

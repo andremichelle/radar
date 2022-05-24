@@ -45,7 +45,7 @@ const showProgress = (() => {
 
     const editor = new Editor()
     editor.setPattern(pattern)
-    HTML.query('main').appendChild(editor.element())
+    HTML.query('.radar').appendChild(editor.element())
 
     const buffer: AudioBuffer = await fetch('loops/dnb.ogg')
         .then(result => result.arrayBuffer())
