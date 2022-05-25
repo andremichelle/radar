@@ -1,7 +1,7 @@
-import {Obstacle, OutlineEvaluator} from "./obstacles.js"
+import {Obstacle, OutlineObstacle} from "./obstacles.js"
 
 export class Pattern {
-    private static Outline = new OutlineEvaluator()
+    private static Outline = new OutlineObstacle()
 
     private readonly obstacles: Obstacle[] = [Pattern.Outline]
 

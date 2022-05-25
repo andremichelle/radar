@@ -29,7 +29,7 @@ export class Editor {
         }, moveTo: (x: number, y: number): void => {
             this.origin.x = x
             this.origin.y = y
-        }
+        }, constrainToCircle: (): boolean => true
     }]
 
     private tool: Option<Terminable> = Options.None
@@ -122,9 +122,13 @@ export class Editor {
                         const local = this.globalToLocal(event.clientX, event.clientY)
                         const x = local.x
                         const y = local.y
-                        const d = Math.sqrt(x * x + y * y)
-                        if (d > 1.0) {
-                            handler.moveTo(x / d, y / d)
+                        if (handler.constrainToCircle()) {
+                            const d = Math.sqrt(x * x + y * y)
+                            if (d > 1.0) {
+                                handler.moveTo(x / d, y / d)
+                            } else {
+                                handler.moveTo(x, y)
+                            }
                         } else {
                             handler.moveTo(x, y)
                         }
