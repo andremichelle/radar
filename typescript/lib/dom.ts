@@ -286,9 +286,9 @@ export class RenderRequest {
 export const Colors: string[] = (() => {
     const colors: string[] = ArrayUtils.fill(5, index => {
         const phase = index / 4
-        const hue = 60 + phase * 300
+        const hue = 45 + phase * 300
         const saturation = 15 + phase * 35
-        const brightness = 6 + phase * 66
+        const brightness = 6 + phase * 72
         return `hsl(${Math.round(hue % 360)}, ${Math.round(saturation)}%, ${Math.round(brightness)}%)`
     })
     colors.forEach((color, index) =>

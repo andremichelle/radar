@@ -12,7 +12,7 @@ import {
 import {HTML} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
 import {distance, DragHandler, snapAngle, snapLength} from "./dragging.js"
-import {ArcObstacle, LineObstacle, Obstacle, QBezierObstacle} from "./obstacles.js"
+import {ArcObstacle, CurveObstacle, LineObstacle, Obstacle} from "./obstacles.js"
 import {Pattern} from "./pattern.js"
 import {Point, Ray} from "./ray.js"
 import {Renderer} from "./render.js"
@@ -22,14 +22,11 @@ type Tool = 'move' | 'line' | 'arc' | 'curve'
 export class Editor {
     private static Ray: Ray = new Ray()
     private static WaveformWidth: number = 48
-    private static Size: number = Renderer.Diameter + Editor.WaveformWidth * 2
-    private static Radius: number = Editor.Size / 2
+    private static Radius: number = Renderer.Radius + Editor.WaveformWidth
+    private static Size: number = Editor.Radius << 1
     private static CaptureRadius = 8.0 / Renderer.Radius
 
-    private readonly canvas: HTMLCanvasElement = HTML.create('canvas', {
-        style: `width: ${Editor.Size}px; height: ${Editor.Size}px;`,
-        width: Editor.Size * devicePixelRatio, height: Editor.Size * devicePixelRatio
-    })
+    private readonly canvas: HTMLCanvasElement = HTML.create('canvas')
     private readonly context = this.canvas.getContext('2d')
     private readonly origin: Point = {x: 0.0, y: 0.0}
     private readonly angleResolution: ObservableValue<number> = new ObservableValueImpl<number>(64)
@@ -64,8 +61,8 @@ export class Editor {
     globalToLocal(x: number, y: number): Point {
         const rect = this.canvas.getBoundingClientRect()
         return {
-            x: (x - rect.left - Editor.Radius) / Renderer.Radius,
-            y: (y - rect.top - Editor.Radius) / Renderer.Radius
+            x: (x - rect.left - rect.width / 2) / Renderer.Radius,
+            y: (y - rect.top - rect.height / 2) / Renderer.Radius
         }
     }
 
@@ -96,12 +93,15 @@ export class Editor {
     private update = (): void => {
         const canvas = this.canvas
         const context = this.context
+        const clientWidth = canvas.clientWidth
+        const clientHeight = canvas.clientHeight
+        canvas.width = clientWidth * devicePixelRatio
+        canvas.height = clientHeight * devicePixelRatio
 
-        context.clearRect(0.0, 0.0, canvas.width, canvas.height)
-        this.waveform.ifPresent(bitmap => context.drawImage(bitmap, 0, 0))
         context.save()
         context.scale(devicePixelRatio, devicePixelRatio)
-        context.translate(Editor.Radius, Editor.Radius)
+        context.translate(clientWidth / 2, clientHeight / 2)
+        this.waveform.ifPresent(bitmap => context.drawImage(bitmap, -Editor.Radius, -Editor.Radius, Editor.Size, Editor.Size))
         context.lineWidth = 0.0
         Renderer.renderRadarInside(context, this.angleResolution.get(), this.distanceResolution.get())
         Renderer.renderRayOrigin(context, this.origin)
@@ -151,7 +151,7 @@ export class Editor {
         })
     }
 
-    private installCreateTool<OBSTACLE extends Obstacle>(
+    private installCreateTool<OBSTACLE extends Obstacle<any>>(
         factory: (x0: number, y0: number) => OBSTACLE,
         move: (obstacle: OBSTACLE, x0: number, y0: number, x1: number, y1: number) => void
     ): Terminable {
@@ -202,7 +202,7 @@ export class Editor {
                 )
             case 'curve':
                 return this.installCreateTool(
-                    (x0: number, y0: number) => new QBezierObstacle(x0, y0, x0, y0, x0, y0),
+                    (x0: number, y0: number) => new CurveObstacle(x0, y0, x0, y0, x0, y0),
                     (obstacle, x0, y0, x1, y1) =>
                         obstacle.set(x0, y0, (x0 + x1) / 2.0, (y0 + y1) / 2.0, x1, y1)
                 )

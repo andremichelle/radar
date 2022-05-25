@@ -40,7 +40,7 @@ export class Ray {
         return this
     }
 
-    * trace(obstacles: ReadonlyArray<Obstacle>): Generator<Readonly<Ray>> {
+    * trace(obstacles: ReadonlyArray<Obstacle<any>>): Generator<Readonly<Ray>> {
         while (this.step(obstacles) === Touch.Obstacle) {
             if (this.moveExceeded()) {
                 this.x = Math.sin(this.lastAngle)
@@ -53,15 +53,15 @@ export class Ray {
         yield this
     }
 
-    eval(obstacles: ReadonlyArray<Obstacle>): number {
+    eval(obstacles: ReadonlyArray<Obstacle<any>>): number {
         while (this.step(obstacles) === Touch.Obstacle) {
             if (this.moveExceeded()) return this.lastAngle
         }
         return this.lastAngle = this.angle()
     }
 
-    step(obstacles: ReadonlyArray<Obstacle>): Touch {
-        let closestObstacle: Obstacle = null
+    step(obstacles: ReadonlyArray<Obstacle<any>>): Touch {
+        let closestObstacle: Obstacle<any> = null
         let closestDistance = Number.MAX_VALUE
         obstacles.forEach(modifier => {
             const distance = modifier.capture(this)

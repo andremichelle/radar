@@ -1,23 +1,26 @@
 @import common
+@import menu
 
 main
   width: 100%
   height: 100%
   display: flex
-  align-items: center
-  justify-content: center
+  flex-direction: column
 
-  div.editor
+  .radar
+    flex: 1 0 0
     display: flex
-    flex-direction: column
-    row-gap: 16px
+    position: relative
 
-    .radar
-      flex: 0 0 auto
-      position: relative
+    canvas
+      width: 100%
+      height: 100%
+      position: absolute
+      pointer-events: all
 
 form.tools
-  left: -48px
+  left: 16px
+  top: 16px
   padding: 6px 3px
   flex: 0 0 40px
   display: flex
@@ -29,6 +32,7 @@ form.tools
   overflow: hidden
   background: linear-gradient(rgba(white, 0.06) 25%, rgba(white, 0.1))
   box-shadow: 0 0 1px 0 rgba(white, 0.3), 0 3px 4px 0 rgba(black, 0.5), 0 16px 8px 0 rgba(black, 0.1)
+  z-index: 1
 
   svg
     padding: 4px
@@ -39,6 +43,7 @@ form.tools
 
   label
     display: flex
+    pointer-events: all
 
     &:hover svg
       box-shadow: 0 0 1px 0 rgba(white, 0.2)

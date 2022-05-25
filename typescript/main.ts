@@ -8,13 +8,13 @@ import {HTML} from "./lib/dom.js"
 
 /**
  * TODO
+ * [ ] Bug > Move origin onto outline > Crash
  * [ ] Format IO
  * [ ] Menu (Save, Load, Clear)
  * [ ] Delete shapes
  * [ ] loop bpm / duration in bars
  * [ ] Time-stretcher with transient duration detection or best correlation
  * [ ] Reset origin
- * [ ] Full-page canvas
  * [ ] Keyboard shortcuts (move, create, escape)
  */
 

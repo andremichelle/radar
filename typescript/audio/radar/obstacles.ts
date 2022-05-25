@@ -1,8 +1,19 @@
+import {Serializer} from "../../lib/common.js"
 import {TAU} from "../../lib/math.js"
 import {distance, DragHandler} from "./dragging.js"
 import {Ray} from "./ray.js"
 
-export interface Obstacle {
+const Epsilon: number = 0.00001
+
+const drawHandler = (context: CanvasRenderingContext2D, x: number, y: number, scale: number): void => {
+    context.beginPath()
+    context.arc(x * scale, y * scale, 4, 0.0, TAU)
+    context.fill()
+}
+
+export type ObstacleFormat = LineObstacleFormat | ArcObstacleFormat | CurveObstacleFormat
+
+export interface Obstacle<FORMAT extends ObstacleFormat> extends Serializer<FORMAT> {
     capture(ray: Ray): number
 
     reflect(ray: Ray): void
@@ -16,15 +27,7 @@ export interface Obstacle {
     dragHandlers: ReadonlyArray<DragHandler>
 }
 
-const Epsilon: number = 0.00001
-
-const drawHandler = (context: CanvasRenderingContext2D, x: number, y: number, scale: number): void => {
-    context.beginPath()
-    context.arc(x * scale, y * scale, 4, 0.0, TAU)
-    context.fill()
-}
-
-export class OutlineObstacle implements Obstacle {
+export class OutlineObstacle implements Obstacle<ObstacleFormat> {
     dragHandlers: ReadonlyArray<DragHandler> = []
 
     capture(ray: Ray): number {
@@ -49,9 +52,25 @@ export class OutlineObstacle implements Obstacle {
     isBoundary(): boolean {
         return true
     }
+
+    deserialize(format: ObstacleFormat): Serializer<ObstacleFormat> {
+        return this
+    }
+
+    serialize(): ObstacleFormat {
+        throw new Error()
+    }
 }
 
-export class LineObstacle implements Obstacle {
+export interface LineObstacleFormat {
+    class: 'line'
+    x0: number
+    y0: number
+    x1: number
+    y1: number
+}
+
+export class LineObstacle implements Obstacle<LineObstacleFormat> {
     private x0: number
     private y0: number
     private x1: number
@@ -108,6 +127,21 @@ export class LineObstacle implements Obstacle {
         return false
     }
 
+    deserialize(format: LineObstacleFormat): Serializer<LineObstacleFormat> {
+        this.set(format.x0, format.y0, format.x1, format.y1)
+        return this
+    }
+
+    serialize(): LineObstacleFormat {
+        return {
+            x0: this.x0,
+            y0: this.y0,
+            x1: this.x1,
+            y1: this.y1,
+            class: 'line'
+        }
+    }
+
     readonly dragHandlers: ReadonlyArray<DragHandler> = [
         {
             distance: (x: number, y: number) => distance(x, y, this.x0, this.y0),
@@ -135,7 +169,16 @@ export class LineObstacle implements Obstacle {
     }
 }
 
-export class ArcObstacle implements Obstacle {
+export interface ArcObstacleFormat {
+    class: 'arc'
+    x0: number
+    y0: number
+    x1: number
+    y1: number
+    bend: number
+}
+
+export class ArcObstacle implements Obstacle<ArcObstacleFormat> {
     private x0: number
     private y0: number
     private x1: number
@@ -270,8 +313,20 @@ export class ArcObstacle implements Obstacle {
         return false
     }
 
-    appearsAsLine(): boolean {
-        return Math.abs(this.bend) < Epsilon
+    deserialize(format: ArcObstacleFormat): Serializer<ArcObstacleFormat> {
+        this.set(format.x0, format.y0, format.x1, format.y1, format.bend)
+        return this
+    }
+
+    serialize(): ArcObstacleFormat {
+        return {
+            x0: this.x0,
+            y0: this.y0,
+            x1: this.x1,
+            y1: this.y1,
+            bend: this.bend,
+            class: 'arc'
+        }
     }
 
     readonly dragHandlers: ReadonlyArray<DragHandler> = [
@@ -296,6 +351,10 @@ export class ArcObstacle implements Obstacle {
                 this.set(this.x0, this.y0, this.x1, this.y1, bend)
             }, constrainToCircle: (): boolean => false
         }]
+
+    private appearsAsLine(): boolean {
+        return Math.abs(this.bend) < Epsilon
+    }
 
     private update(): void {
         const dx = this.x1 - this.x0
@@ -325,7 +384,17 @@ export class ArcObstacle implements Obstacle {
     }
 }
 
-export class QBezierObstacle implements Obstacle {
+export interface CurveObstacleFormat {
+    class: 'curve'
+    x0: number
+    y0: number
+    x1: number
+    y1: number
+    x2: number
+    y2: number
+}
+
+export class CurveObstacle implements Obstacle<CurveObstacleFormat> {
     private x0: number
     private y0: number
     private x1: number
@@ -432,6 +501,23 @@ export class QBezierObstacle implements Obstacle {
 
     isBoundary(): boolean {
         return false
+    }
+
+    deserialize(format: CurveObstacleFormat): Serializer<CurveObstacleFormat> {
+        this.set(format.x0, format.y0, format.x1, format.y1, format.x2, format.y2)
+        return this
+    }
+
+    serialize(): CurveObstacleFormat {
+        return {
+            x0: this.x0,
+            y0: this.y0,
+            x1: this.x1,
+            y1: this.y1,
+            x2: this.x2,
+            y2: this.y2,
+            class: "curve"
+        }
     }
 
     readonly dragHandlers: ReadonlyArray<DragHandler> = [
