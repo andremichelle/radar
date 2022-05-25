@@ -1,7 +1,7 @@
 import {Serializer} from "../../lib/common.js"
 import {ArcObstacle, CurveObstacle, LineObstacle, Obstacle, ObstacleFormat, OutlineObstacle} from "./obstacles.js"
 
-interface PatternFormat {
+export interface PatternFormat {
     obstacles: ObstacleFormat[]
 }
 
@@ -43,7 +43,9 @@ export class Pattern implements Serializer<PatternFormat> {
 
     serialize(): PatternFormat {
         return {
-            obstacles: this.obstacles.map(obstacle => obstacle.serialize())
+            obstacles: this.obstacles
+                .filter(obstacle => obstacle !== Pattern.Outline)
+                .map(obstacle => obstacle.serialize())
         }
     }
 }

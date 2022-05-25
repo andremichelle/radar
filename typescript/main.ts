@@ -2,15 +2,14 @@ import {LimiterWorklet} from "./audio/limiter/worklet.js"
 import {MeterWorklet} from "./audio/meter/worklet.js"
 import {MetronomeWorklet} from "./audio/metronome/worklet.js"
 import {Editor} from "./audio/radar/editor.js"
-import {Pattern} from "./audio/radar/pattern.js"
+import {Pattern, PatternFormat} from "./audio/radar/pattern.js"
 import {Boot, newAudioContext, preloadImagesOfCssFile} from "./lib/boot.js"
 import {HTML} from "./lib/dom.js"
+import {ListItem, MenuBar} from "./lib/menu.js"
 
 /**
  * TODO
  * [ ] Bug > Move origin onto outline > Crash
- * [ ] Format IO
- * [ ] Menu (Save, Load, Clear)
  * [ ] Delete shapes
  * [ ] loop bpm / duration in bars
  * [ ] Time-stretcher with transient duration detection or best correlation
@@ -42,10 +41,6 @@ const showProgress = (() => {
     // --- BOOT ENDS ---
 
     const pattern = new Pattern()
-    // pattern.addObstacle(new LineObstacle(-0.8, -0.5, 0.8, -0.5))
-    // pattern.addObstacle(new ArcObstacle(-0.25, 0.5, 0.5, 0.5, 1.3))
-    // pattern.addObstacle(new ArcObstacle(0.25, -0.5, 0.25, 0.5, 0))
-    // pattern.addObstacle(new QBezierObstacle(-0.5, 0.25, 0.25, -0.5, 0.5, 0.25))
 
     const editor = new Editor()
     editor.setPattern(pattern)
@@ -55,6 +50,51 @@ const showProgress = (() => {
         .then(result => result.arrayBuffer())
         .then(buffer => context.decodeAudioData(buffer))
     editor.showAudioBuffer(buffer)
+
+    const pickerOpts: PickerOptions = {
+        multiple: false,
+        suggestedName: "radar",
+        types: [{description: "Radar Format", accept: {"json/*": [".json"]}}]
+    }
+
+    MenuBar.install().addButton(HTML.query('[data-menu=file]'), ListItem.root()
+        .addRuntimeChildrenCallback(item => {
+            item
+                .addListItem(ListItem.default('Open', '⌘O')
+                    .onTrigger(async () => {
+                        let fileHandles: FileSystemFileHandle[]
+                        try {
+                            fileHandles = await window.showOpenFilePicker(pickerOpts)
+                        } catch (e) {
+                            return
+                        }
+                        if (undefined === fileHandles || 0 === fileHandles.length) {
+                            return
+                        }
+                        try {
+                            const fileStream = await fileHandles[0].getFile()
+                            const text: string = await fileStream.text()
+                            const format = await JSON.parse(text) as PatternFormat
+                            pattern.deserialize(format)
+                        } catch (e) {
+                            console.warn(e)
+                        }
+                    }))
+                .addListItem(ListItem.default('Save', '⌘S')
+                    .onTrigger(async () => {
+                        try {
+                            const fileSystemFileHandle = await window.showSaveFilePicker(pickerOpts)
+                            const fileStream = await fileSystemFileHandle.createWritable()
+                            await fileStream.write(new Blob([JSON.stringify(pattern.serialize())], {type: "application/json"}))
+                            await fileStream.close()
+                            console.debug('file saved.')
+                        } catch (e) {
+                            console.debug(e)
+                        }
+                    }))
+                .addListItem(ListItem.default('Clear')
+                    .onTrigger(() => pattern.clearObstacles()))
+        }))
 
     // prevent dragging entire document on mobile
     document.addEventListener('touchmove', (event: TouchEvent) => event.preventDefault(), {passive: false})
