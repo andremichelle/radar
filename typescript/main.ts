@@ -9,7 +9,6 @@ import {ListItem, MenuBar} from "./lib/menu.js"
 
 /**
  * TODO
- * [ ] Bug > Move origin onto outline > Crash
  * [ ] Delete shapes
  * [ ] loop bpm / duration in bars
  * [ ] Time-stretcher with transient duration detection or best correlation

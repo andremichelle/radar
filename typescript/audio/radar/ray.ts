@@ -9,12 +9,12 @@ export enum Touch {
     Obstacle, Last
 }
 
-const Epsilon: number = 1.0001
 
 /**
  * Special ray implementation whereas origin is always inside a unit circle
  */
 export class Ray {
+    static readonly Epsilon: number = 1.0001
     static readonly MaxMovements: number = 250
 
     x: number = 0.0
@@ -124,6 +124,6 @@ export class Ray {
 
     assertInsideUnitCircle(): void {
         const distance = Math.sqrt(this.x * this.x + this.y * this.y)
-        console.assert(distance <= Epsilon, `Outside circle (${distance})`)
+        console.assert(distance <= Ray.Epsilon, `Outside circle (${distance})`)
     }
 }

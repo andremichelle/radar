@@ -32,7 +32,7 @@ export class OutlineObstacle implements Obstacle<ObstacleFormat> {
 
     capture(ray: Ray): number {
         const ev = ray.cross()
-        const sq = 1.0 - ev * ev
+        const sq = Ray.Epsilon - ev * ev
         console.assert(sq >= 0.0)
         return Math.sqrt(sq) - ray.dot()
     }
