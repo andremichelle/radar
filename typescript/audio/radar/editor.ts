@@ -11,7 +11,7 @@ import {
 } from "../../lib/common.js"
 import {HTML} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
-import {distance, DragHandler, snapAngle, snapLength} from "./dragging.js"
+import {DragHandler, snapAngle, snapLength} from "./dragging.js"
 import {ArcObstacle, CurveObstacle, LineObstacle, Obstacle} from "./obstacles.js"
 import {Pattern} from "./pattern.js"
 import {Point, Ray} from "./ray.js"
@@ -28,18 +28,8 @@ export class Editor {
 
     private readonly canvas: HTMLCanvasElement = HTML.create('canvas')
     private readonly context = this.canvas.getContext('2d')
-    private readonly origin: Point = {x: 0.0, y: 0.0}
     private readonly angleResolution: ObservableValue<number> = new ObservableValueImpl<number>(64)
     private readonly distanceResolution: ObservableValue<number> = new ObservableValueImpl<number>(16)
-
-    private readonly dragHandlers: DragHandler[] = [{
-        distance: (x: number, y: number): number => {
-            return distance(x, y, this.origin.x, this.origin.y)
-        }, moveTo: (x: number, y: number): void => {
-            this.origin.x = x
-            this.origin.y = y
-        }, constrainToCircle: (): boolean => true
-    }]
 
     private tool: Option<Terminable> = Options.None
     private toolCursor: Option<Point> = Options.None
@@ -104,16 +94,17 @@ export class Editor {
         this.waveform.ifPresent(bitmap => context.drawImage(bitmap, -Editor.Radius, -Editor.Radius, Editor.Size, Editor.Size))
         context.lineWidth = 0.0
         Renderer.renderRadarInside(context, this.angleResolution.get(), this.distanceResolution.get())
-        Renderer.renderRayOrigin(context, this.origin)
         this.pattern.ifPresent(pattern => {
-            const ray = Editor.Ray.reuse(this.position * TAU, this.origin.x, this.origin.y)
+            const origin = pattern.getOrigin()
+            Renderer.renderRayOrigin(context, origin)
+            const ray = Editor.Ray.reuse(this.position * TAU, origin.x, origin.y)
             Renderer.renderObstacles(context, pattern)
             Renderer.renderRayTrail(context, pattern, ray)
             Renderer.renderWaveformPosition(context, ray.angle(), Editor.WaveformWidth)
 
             // TODO remove. it just validates the result
             {
-                const ray = Editor.Ray.reuse(this.position * TAU, this.origin.x, this.origin.y)
+                const ray = Editor.Ray.reuse(this.position * TAU, origin.x, origin.y)
                 Renderer.renderWaveformPosition(context, ray.eval(pattern.getObstacles()), Editor.WaveformWidth / 3, 3)
             }
         })
@@ -133,7 +124,7 @@ export class Editor {
                 const handler: DragHandler | null = pattern
                     .getObstacles()
                     .flatMap(obstacle => obstacle.dragHandlers)
-                    .concat(this.dragHandlers)
+                    .concat(pattern.dragHandlers)
                     .reduce((prev: DragHandler, next: DragHandler) => {
                         const distance = next.distance(local.x, local.y)
                         return prev === null
