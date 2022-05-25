@@ -4,6 +4,7 @@ import {Pattern} from "./pattern.js"
 import {Point, Ray} from "./ray.js"
 
 const RadarOriginStyle = Colors[1]
+const CursorStyle = Colors[2]
 const ObstacleStyle = Colors[2]
 const RayTrailStyle = Colors[3]
 const WaveformStyle = Colors[1]
@@ -25,7 +26,7 @@ export class Renderer {
         gradient.addColorStop(0.5, ObstacleStyle)
         gradient.addColorStop(1.0, 'transparent')
         context.strokeStyle = gradient
-        context.setLineDash([1, Renderer.Radius / distanceResolution - 1])
+        context.setLineDash([1, (Renderer.Radius - 0.5) / distanceResolution - 1])
         context.beginPath()
 
         for (let i = 0; i < angleResolution; i++) {
@@ -44,6 +45,16 @@ export class Renderer {
         context.arc(origin.x * Renderer.Radius, origin.y * Renderer.Radius, 7, 0.0, TAU, false)
         context.closePath()
         context.stroke()
+    }
+
+    static renderCursor(context: CanvasRenderingContext2D, local: Point): void {
+        context.fillStyle = CursorStyle
+        context.lineWidth = 0.0
+        context.beginPath()
+        context.arc(local.x * Renderer.Radius, local.y * Renderer.Radius, 3, 0.0, TAU, false)
+        context.closePath()
+        context.fill()
+        context.fillStyle = 'none'
     }
 
     static renderObstacles(context: CanvasRenderingContext2D, pattern: Pattern): void {

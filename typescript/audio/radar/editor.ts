@@ -6,7 +6,8 @@ import {
     Option,
     Options,
     Terminable,
-    TerminableVoid
+    TerminableVoid,
+    Terminator
 } from "../../lib/common.js"
 import {HTML} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
@@ -44,6 +45,7 @@ export class Editor {
     }]
 
     private tool: Option<Terminable> = Options.None
+    private toolCursor: Option<Point> = Options.None
     private pattern: Option<Pattern> = Options.None
     private waveform: Option<ImageBitmap> = Options.None
 
@@ -115,6 +117,7 @@ export class Editor {
                 Renderer.renderWaveformPosition(context, ray.eval(pattern.getObstacles()), Editor.WaveformWidth / 3, 3)
             }
         })
+        this.toolCursor.ifPresent(point => Renderer.renderCursor(context, point))
         context.restore()
 
         this.position += 0.002
@@ -152,7 +155,19 @@ export class Editor {
         factory: (x0: number, y0: number) => OBSTACLE,
         move: (obstacle: OBSTACLE, x0: number, y0: number, x1: number, y1: number) => void
     ): Terminable {
-        return Events.bindEventListener(this.canvas, 'mousedown', (event: MouseEvent) => {
+        const terminator = new Terminator()
+        terminator.with(Events.bindEventListener(this.canvas, 'mousemove', (event: MouseEvent) => {
+            const local = this.snap(this.globalToLocal(event.clientX, event.clientY), true)
+            if (this.toolCursor.isEmpty()) {
+                this.toolCursor = Options.valueOf(local)
+            } else {
+                const cursor = this.toolCursor.get()
+                cursor.x = local.x
+                cursor.y = local.y
+            }
+        }))
+        terminator.with({terminate: () => this.toolCursor = Options.None})
+        terminator.with(Events.bindEventListener(this.canvas, 'mousedown', (event: MouseEvent) => {
             const {x: x0, y: y0} = this.snap(this.globalToLocal(event.clientX, event.clientY), false)
             if (x0 * x0 + y0 * y0 > 1.0) {
                 return
@@ -165,7 +180,8 @@ export class Editor {
                     move(obstacle, x0, y0, local.x, local.y)
                 })
             })
-        })
+        }))
+        return terminator
     }
 
     private switchTool(tool: Tool): Terminable {
@@ -180,9 +196,9 @@ export class Editor {
                 )
             case 'arc':
                 return this.installCreateTool(
-                    (x0: number, y0: number) => new ArcObstacle(x0, y0, x0, y0, 1.0),
+                    (x0: number, y0: number) => new ArcObstacle(x0, y0, x0, y0, 0.0),
                     (obstacle, x0, y0, x1, y1) =>
-                        obstacle.set(x0, y0, x1, y1, 1.0)
+                        obstacle.set(x0, y0, x1, y1, 0.0)
                 )
             case 'curve':
                 return this.installCreateTool(

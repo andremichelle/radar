@@ -2,7 +2,6 @@ import {LimiterWorklet} from "./audio/limiter/worklet.js"
 import {MeterWorklet} from "./audio/meter/worklet.js"
 import {MetronomeWorklet} from "./audio/metronome/worklet.js"
 import {Editor} from "./audio/radar/editor.js"
-import {ArcObstacle} from "./audio/radar/obstacles.js"
 import {Pattern} from "./audio/radar/pattern.js"
 import {Boot, newAudioContext, preloadImagesOfCssFile} from "./lib/boot.js"
 import {HTML} from "./lib/dom.js"
@@ -14,6 +13,7 @@ import {HTML} from "./lib/dom.js"
  * [ ] Time-stretcher with transient duration detection
  * [ ] Reset origin
  * [ ] Full-page canvas
+ * [ ] Keyboard shortcuts (move, create, escape)
  */
 
 const showProgress = (() => {
