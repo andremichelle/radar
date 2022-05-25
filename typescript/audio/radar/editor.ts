@@ -14,7 +14,7 @@ export class Editor {
     private static WaveformWidth: number = 48
     private static Size: number = Renderer.Diameter + Editor.WaveformWidth * 2
     private static Radius: number = Editor.Size / 2
-    private static CaptureRadius = 4.0 / Renderer.Radius
+    private static CaptureRadius = 8.0 / Renderer.Radius
 
     private readonly canvas: HTMLCanvasElement = HTML.create('canvas', {
         style: `width: ${Editor.Size}px; height: ${Editor.Size}px;`,

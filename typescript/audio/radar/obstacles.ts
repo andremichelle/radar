@@ -249,9 +249,9 @@ class ArcEvaluator implements Evaluator {
             moveTo: (x: number, y: number) => {
                 const dx = this.x1 - this.x0
                 const dy = this.y1 - this.y0
-                const bend = Math.abs(dy) < Epsilon
-                    ? (2.0 * (this.y0 - y) - dy) / dx
-                    : (2.0 * (x - this.x0) - dx) / dy
+                const cx = this.x0 + dx * 0.5
+                const cy = this.y0 + dy * 0.5
+                const bend = 2.0 * (dy * (x - cx) - dx * (y - cy)) / (dx * dx + dy * dy)
                 this.set(this.x0, this.y0, this.x1, this.y1, bend)
             }
         }]
