@@ -1,7 +1,16 @@
-import {Events, HTMLRadioGroup, Option, Options, Terminable, TerminableVoid} from "../../lib/common.js"
+import {
+    Events,
+    HTMLRadioGroup,
+    ObservableValue,
+    ObservableValueImpl,
+    Option,
+    Options,
+    Terminable,
+    TerminableVoid
+} from "../../lib/common.js"
 import {HTML} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
-import {distance, DragHandler} from "./dragging.js"
+import {distance, DragHandler, snapAngle, snapLength} from "./dragging.js"
 import {ArcObstacle, LineObstacle, Obstacle, QBezierObstacle} from "./obstacles.js"
 import {Pattern} from "./pattern.js"
 import {Point, Ray} from "./ray.js"
@@ -22,6 +31,8 @@ export class Editor {
     })
     private readonly context = this.canvas.getContext('2d')
     private readonly origin: Point = {x: 0.0, y: 0.0}
+    private readonly angleResolution: ObservableValue<number> = new ObservableValueImpl<number>(64)
+    private readonly distanceResolution: ObservableValue<number> = new ObservableValueImpl<number>(16)
 
     private readonly dragHandlers: DragHandler[] = [{
         distance: (x: number, y: number): number => {
@@ -53,6 +64,16 @@ export class Editor {
         return {
             x: (x - rect.left - Editor.Radius) / Renderer.Radius,
             y: (y - rect.top - Editor.Radius) / Renderer.Radius
+        }
+    }
+
+    snap(local: Point, constrainToCircle: boolean = false): Point {
+        const l = snapLength(Math.sqrt(local.x * local.x + local.y * local.y), this.distanceResolution.get())
+        const d = constrainToCircle ? Math.min(1.0, l) : l
+        const a = snapAngle(Math.atan2(local.y, local.x), this.angleResolution.get())
+        return {
+            x: Math.cos(a) * d,
+            y: Math.sin(a) * d
         }
     }
 
@@ -118,20 +139,9 @@ export class Editor {
                                 ? next : prev
                     }, null)
                 if (handler !== null) {
-                    Editor.installMove((event: MouseEvent) => {
-                        const local = this.globalToLocal(event.clientX, event.clientY)
-                        const x = local.x
-                        const y = local.y
-                        if (handler.constrainToCircle()) {
-                            const d = Math.sqrt(x * x + y * y)
-                            if (d > 1.0) {
-                                handler.moveTo(x / d, y / d)
-                            } else {
-                                handler.moveTo(x, y)
-                            }
-                        } else {
-                            handler.moveTo(x, y)
-                        }
+                    Editor.startDragging((event: MouseEvent) => {
+                        const local = this.snap(this.globalToLocal(event.clientX, event.clientY), handler.constrainToCircle())
+                        handler.moveTo(local.x, local.y)
                     })
                 }
             })
@@ -143,22 +153,16 @@ export class Editor {
         move: (obstacle: OBSTACLE, x0: number, y0: number, x1: number, y1: number) => void
     ): Terminable {
         return Events.bindEventListener(this.canvas, 'mousedown', (event: MouseEvent) => {
-            const {x: x0, y: y0} = this.globalToLocal(event.clientX, event.clientY)
+            const {x: x0, y: y0} = this.snap(this.globalToLocal(event.clientX, event.clientY), false)
             if (x0 * x0 + y0 * y0 > 1.0) {
                 return
             }
             this.pattern.ifPresent(pattern => {
                 const obstacle: OBSTACLE = factory(x0, y0)
-                console.log(obstacle)
                 pattern.addObstacle(obstacle)
-                Editor.installMove((event: MouseEvent) => {
-                    const {x: x1, y: y1} = this.globalToLocal(event.clientX, event.clientY)
-                    const d = Math.sqrt(x1 * x1 + y1 * y1)
-                    if (d > 1.0) {
-                        move(obstacle, x0, y0, x1 / d, y1 / d)
-                    } else {
-                        move(obstacle, x0, y0, x1, y1)
-                    }
+                Editor.startDragging((event: MouseEvent) => {
+                    const local = this.snap(this.globalToLocal(event.clientX, event.clientY), true)
+                    move(obstacle, x0, y0, local.x, local.y)
                 })
             })
         })
@@ -191,7 +195,7 @@ export class Editor {
         }
     }
 
-    private static installMove(move: (event: MouseEvent) => void) {
+    private static startDragging(move: (event: MouseEvent) => void) {
         window.addEventListener('mousemove', move)
         window.addEventListener('mouseup', () =>
             window.removeEventListener('mousemove', move), {once: true})
