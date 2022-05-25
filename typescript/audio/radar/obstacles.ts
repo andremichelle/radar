@@ -24,6 +24,8 @@ export interface Obstacle<FORMAT extends ObstacleFormat> extends Serializer<FORM
 
     isBoundary(): boolean
 
+    isPointInObstacle(x: number, y: number): boolean
+
     dragHandlers: ReadonlyArray<DragHandler>
 }
 
@@ -53,6 +55,10 @@ export class OutlineObstacle implements Obstacle<ObstacleFormat> {
         return true
     }
 
+    isPointInObstacle(x: number, y: number): boolean {
+        return false
+    }
+
     deserialize(format: ObstacleFormat): Serializer<ObstacleFormat> {
         return this
     }
@@ -79,6 +85,8 @@ export class LineObstacle implements Obstacle<LineObstacleFormat> {
     private dy: number
     private nx: number
     private ny: number
+
+    private cachedPath: Path2D = null
 
     constructor(x0: number, y0: number, x1: number, y1: number) {
         this.set(x0, y0, x1, y1)
@@ -112,10 +120,12 @@ export class LineObstacle implements Obstacle<LineObstacleFormat> {
     }
 
     paintPath(context: CanvasRenderingContext2D, scale: number): void {
-        context.beginPath()
-        context.moveTo(this.x0 * scale, this.y0 * scale)
-        context.lineTo(this.x1 * scale, this.y1 * scale)
-        context.stroke()
+        if (this.cachedPath === null) {
+            this.cachedPath = new Path2D()
+            this.cachedPath.moveTo(this.x0 * scale, this.y0 * scale)
+            this.cachedPath.lineTo(this.x1 * scale, this.y1 * scale)
+        }
+        context.stroke(this.cachedPath)
     }
 
     paintHandler(context: CanvasRenderingContext2D, scale: number): void {
@@ -124,6 +134,10 @@ export class LineObstacle implements Obstacle<LineObstacleFormat> {
     }
 
     isBoundary(): boolean {
+        return false
+    }
+
+    isPointInObstacle(x: number, y: number): boolean {
         return false
     }
 
@@ -161,6 +175,7 @@ export class LineObstacle implements Obstacle<LineObstacleFormat> {
         }]
 
     private update(): void {
+        this.cachedPath = null
         this.dx = this.x1 - this.x0
         this.dy = this.y1 - this.y0
         const nl = Math.sqrt(this.dx * this.dx + this.dy * this.dy)
@@ -310,6 +325,10 @@ export class ArcObstacle implements Obstacle<ArcObstacleFormat> {
     }
 
     isBoundary(): boolean {
+        return false
+    }
+
+    isPointInObstacle(x: number, y: number): boolean {
         return false
     }
 
@@ -500,6 +519,10 @@ export class CurveObstacle implements Obstacle<CurveObstacleFormat> {
     }
 
     isBoundary(): boolean {
+        return false
+    }
+
+    isPointInObstacle(x: number, y: number): boolean {
         return false
     }
 

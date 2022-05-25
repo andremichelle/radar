@@ -101,12 +101,6 @@ export class Editor {
             Renderer.renderObstacles(context, pattern)
             Renderer.renderRayTrail(context, pattern, ray)
             Renderer.renderWaveformPosition(context, ray.angle(), Editor.WaveformWidth)
-
-            // TODO remove. it just validates the result
-            {
-                const ray = Editor.Ray.reuse(this.position * TAU, origin.x, origin.y)
-                Renderer.renderWaveformPosition(context, ray.eval(pattern.getObstacles()), Editor.WaveformWidth / 3, 3)
-            }
         })
         this.toolCursor.ifPresent(point => Renderer.renderCursor(context, point))
         context.restore()
