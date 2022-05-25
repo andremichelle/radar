@@ -101,7 +101,7 @@ export class Editor {
         context.scale(devicePixelRatio, devicePixelRatio)
         context.translate(Editor.Radius, Editor.Radius)
         context.lineWidth = 0.0
-        Renderer.renderRadarInside(context)
+        Renderer.renderRadarInside(context, this.angleResolution.get(), this.distanceResolution.get())
         Renderer.renderRayOrigin(context, this.origin)
         this.pattern.ifPresent(pattern => {
             const ray = Editor.Ray.reuse(this.position * TAU, this.origin.x, this.origin.y)

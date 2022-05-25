@@ -12,7 +12,8 @@ import {HTML} from "./lib/dom.js"
  * [ ] Delete shapes
  * [ ] loop bpm / duration in bars
  * [ ] Time-stretcher with transient duration detection
- * [ ] Editor snapping
+ * [ ] Reset origin
+ * [ ] Full-page canvas
  */
 
 const showProgress = (() => {
@@ -41,7 +42,7 @@ const showProgress = (() => {
     const pattern = new Pattern()
     // pattern.addObstacle(new LineObstacle(-0.8, -0.5, 0.8, -0.5))
     // pattern.addObstacle(new ArcObstacle(-0.25, 0.5, 0.5, 0.5, 1.3))
-    pattern.addObstacle(new ArcObstacle(0.25, -0.5, 0.25, 0.5, 0))
+    // pattern.addObstacle(new ArcObstacle(0.25, -0.5, 0.25, 0.5, 0))
     // pattern.addObstacle(new QBezierObstacle(-0.5, 0.25, 0.25, -0.5, 0.5, 0.25))
 
     const editor = new Editor()

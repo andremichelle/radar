@@ -13,13 +13,28 @@ export class Renderer {
     static Radius: number = 256
     static Diameter: number = Renderer.Radius << 1
 
-    static renderRadarInside(context: CanvasRenderingContext2D): void {
-        context.fillStyle = 'rgba(255, 255, 255, 0.02)'
+    static renderRadarInside(context: CanvasRenderingContext2D, angleResolution: number, distanceResolution: number): void {
+        context.fillStyle = 'rgba(0, 0, 0, 0.4)'
         context.beginPath()
         context.arc(0.0, 0.0, Renderer.Radius, 0.0, TAU, false)
         context.closePath()
         context.fill()
         context.fillStyle = 'none'
+
+        const gradient = context.createRadialGradient(0, 0, Renderer.Radius, 0, 0, 0)
+        gradient.addColorStop(0.5, ObstacleStyle)
+        gradient.addColorStop(1.0, 'transparent')
+        context.strokeStyle = gradient
+        context.setLineDash([1, Renderer.Radius / distanceResolution - 1])
+        context.beginPath()
+
+        for (let i = 0; i < angleResolution; i++) {
+            const a = i / angleResolution * TAU
+            context.moveTo(0, 0)
+            context.lineTo(Math.sin(a) * Renderer.Radius, -Math.cos(a) * Renderer.Radius)
+        }
+        context.stroke()
+        context.setLineDash([])
     }
 
     static renderRayOrigin(context: CanvasRenderingContext2D, origin: Point): void {
@@ -85,6 +100,12 @@ export class Renderer {
         const rr = radius - width
         const resolution = Math.floor(radius * TAU) | 0
         context.translate(radius, radius)
+        context.fillStyle = 'rgba(0, 0, 0, 0.8)'
+        context.beginPath()
+        context.arc(0, 0, radius, 0.0, TAU, false)
+        context.arc(0, 0, radius - width * 2, 0.0, TAU, true)
+        context.fill()
+
         context.globalCompositeOperation = 'lighter'
         context.strokeStyle = WaveformStyle
         context.lineWidth = 1.0

@@ -65,7 +65,7 @@ export class Ray {
         let closestDistance = Number.MAX_VALUE
         obstacles.forEach(modifier => {
             const distance = modifier.capture(this)
-            if (distance > 0.0 && distance < closestDistance) {
+            if (distance > 0.0 && distance <= closestDistance) {
                 closestObstacle = modifier
                 closestDistance = distance
             }
