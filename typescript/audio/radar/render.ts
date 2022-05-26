@@ -1,5 +1,7 @@
+import {Option} from "../../lib/common.js"
 import {Colors} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
+import {Obstacle} from "./obstacles.js"
 import {Pattern} from "./pattern.js"
 import {Point, Ray} from "./ray.js"
 
@@ -57,20 +59,23 @@ export class Renderer {
         context.fillStyle = 'none'
     }
 
-    static renderObstacles(context: CanvasRenderingContext2D, pattern: Pattern): void {
+    static renderObstacles(context: CanvasRenderingContext2D, pattern: Pattern, highlight: Option<Obstacle<any>>): void {
         context.fillStyle = ObstacleStyle
         context.strokeStyle = ObstacleStyle
-        context.lineWidth = 1.0
+        context.lineWidth = 0.0
         pattern
             .getObstacles()
-            .forEach(modifier => {
-                modifier.paintPath(context, Renderer.Radius)
+            .forEach(obstacle => {
+                if(highlight.contains(obstacle)) {
+                    context.fillStyle = context.strokeStyle = 'white'
+                } else {
+                    context.fillStyle = context.strokeStyle = ObstacleStyle
+                }
+                obstacle.paintPath(context, Renderer.Radius)
             })
         pattern
             .getObstacles()
-            .forEach(modifier => {
-                modifier.paintHandler(context, Renderer.Radius)
-            })
+            .forEach(obstacle => obstacle.paintHandler(context, Renderer.Radius))
     }
 
     static renderRayTrail(context: CanvasRenderingContext2D, pattern: Pattern, ray: Ray): void {

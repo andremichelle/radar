@@ -35,6 +35,7 @@ export class Editor {
     private toolCursor: Option<Point> = Options.None
     private pattern: Option<Pattern> = Options.None
     private waveform: Option<ImageBitmap> = Options.None
+    private hovering: Option<Obstacle<any>> = Options.None
 
     private position: number = 0.0
 
@@ -98,7 +99,7 @@ export class Editor {
             const origin = pattern.getOrigin()
             Renderer.renderRayOrigin(context, origin)
             const ray = Editor.Ray.reuse(this.position * TAU, origin.x, origin.y)
-            Renderer.renderObstacles(context, pattern)
+            Renderer.renderObstacles(context, pattern, this.hovering)
             Renderer.renderRayTrail(context, pattern, ray)
             Renderer.renderWaveformPosition(context, ray.angle(), Editor.WaveformWidth)
         })
@@ -112,7 +113,22 @@ export class Editor {
     }
 
     private installMoveTool(): Terminable {
-        return Events.bindEventListener(this.canvas, 'mousedown', (event: MouseEvent) => {
+        const terminator = new Terminator()
+        terminator.with(Events.bindEventListener(this.canvas, 'mousemove', (event: MouseEvent) => {
+            const {x, y} = this.globalToLocal(event.clientX, event.clientY)
+            this.hovering = this.pattern.map(pattern =>
+                pattern
+                    .getObstacles()
+                    .reduce((prev: Obstacle<any>, next: Obstacle<any>) => {
+                        const distance = next.sdf(x, y)
+                        return prev === null
+                            ? distance < Editor.CaptureRadius
+                                ? next : null : distance < prev.sdf(x, y)
+                                ? next : prev
+                    }, null))
+        }))
+        terminator.with({terminate: () => this.hovering = Options.None})
+        terminator.with(Events.bindEventListener(this.canvas, 'mousedown', (event: MouseEvent) => {
             const local = this.globalToLocal(event.clientX, event.clientY)
             this.pattern.ifPresent(pattern => {
                 const handler: DragHandler | null = pattern
@@ -133,7 +149,8 @@ export class Editor {
                     })
                 }
             })
-        })
+        }))
+        return terminator
     }
 
     private installCreateTool<OBSTACLE extends Obstacle<any>>(

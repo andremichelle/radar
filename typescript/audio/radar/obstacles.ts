@@ -1,5 +1,6 @@
 import {Serializer} from "../../lib/common.js"
 import {TAU} from "../../lib/math.js"
+import {sdSegment, vec2} from "../../lib/sdf.js"
 import {distance, DragHandler} from "./dragging.js"
 import {Ray} from "./ray.js"
 
@@ -24,7 +25,7 @@ export interface Obstacle<FORMAT extends ObstacleFormat> extends Serializer<FORM
 
     isBoundary(): boolean
 
-    isPointInObstacle(x: number, y: number): boolean
+    sdf(x: number, y: number): number
 
     dragHandlers: ReadonlyArray<DragHandler>
 }
@@ -55,8 +56,8 @@ export class OutlineObstacle implements Obstacle<ObstacleFormat> {
         return true
     }
 
-    isPointInObstacle(x: number, y: number): boolean {
-        return false
+    sdf(x: number, y: number): number {
+        return Number.MAX_VALUE
     }
 
     deserialize(format: ObstacleFormat): Serializer<ObstacleFormat> {
@@ -85,8 +86,6 @@ export class LineObstacle implements Obstacle<LineObstacleFormat> {
     private dy: number
     private nx: number
     private ny: number
-
-    private cachedPath: Path2D = null
 
     constructor(x0: number, y0: number, x1: number, y1: number) {
         this.set(x0, y0, x1, y1)
@@ -120,12 +119,10 @@ export class LineObstacle implements Obstacle<LineObstacleFormat> {
     }
 
     paintPath(context: CanvasRenderingContext2D, scale: number): void {
-        if (this.cachedPath === null) {
-            this.cachedPath = new Path2D()
-            this.cachedPath.moveTo(this.x0 * scale, this.y0 * scale)
-            this.cachedPath.lineTo(this.x1 * scale, this.y1 * scale)
-        }
-        context.stroke(this.cachedPath)
+        context.beginPath()
+        context.moveTo(this.x0 * scale, this.y0 * scale)
+        context.lineTo(this.x1 * scale, this.y1 * scale)
+        context.stroke()
     }
 
     paintHandler(context: CanvasRenderingContext2D, scale: number): void {
@@ -137,8 +134,8 @@ export class LineObstacle implements Obstacle<LineObstacleFormat> {
         return false
     }
 
-    isPointInObstacle(x: number, y: number): boolean {
-        return false
+    sdf(x: number, y: number): number {
+        return sdSegment(new vec2(x, y), new vec2(this.x0, this.y0), new vec2(this.x1, this.y1))
     }
 
     deserialize(format: LineObstacleFormat): Serializer<LineObstacleFormat> {
@@ -175,7 +172,6 @@ export class LineObstacle implements Obstacle<LineObstacleFormat> {
         }]
 
     private update(): void {
-        this.cachedPath = null
         this.dx = this.x1 - this.x0
         this.dy = this.y1 - this.y0
         const nl = Math.sqrt(this.dx * this.dx + this.dy * this.dy)
@@ -328,8 +324,8 @@ export class ArcObstacle implements Obstacle<ArcObstacleFormat> {
         return false
     }
 
-    isPointInObstacle(x: number, y: number): boolean {
-        return false
+    sdf(x: number, y: number): number {
+        return Number.MAX_VALUE
     }
 
     deserialize(format: ArcObstacleFormat): Serializer<ArcObstacleFormat> {
@@ -522,8 +518,18 @@ export class CurveObstacle implements Obstacle<CurveObstacleFormat> {
         return false
     }
 
-    isPointInObstacle(x: number, y: number): boolean {
-        return false
+    sdf(x: number, y: number): number {
+        let min = Number.MAX_VALUE
+        for (let i = 0; i <= 50; i++) {
+            const t = i * 0.02
+            const t1 = 1.0 - t
+            const cx = t1 * t1 * this.x0 + 2.0 * t * t1 * this.x1 + t * t * this.x2
+            const cy = t1 * t1 * this.y0 + 2.0 * t * t1 * this.y1 + t * t * this.y2
+            const dx = x - cx
+            const dy = y - cy
+            min = Math.min(min, dx * dx + dy * dy)
+        }
+        return Math.sqrt(min)
     }
 
     deserialize(format: CurveObstacleFormat): Serializer<CurveObstacleFormat> {
