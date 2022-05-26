@@ -1,5 +1,5 @@
 import {Observable, ObservableImpl, Observer, Serializer, Terminable, Terminator} from "../../lib/common.js"
-import {distance, DragHandler} from "./dragging.js"
+import {distance, DragHandler} from "./utils.js"
 import {ArcObstacle, CurveObstacle, LineObstacle, Obstacle, ObstacleFormat, OutlineObstacle} from "./obstacles.js"
 import {Point} from "./ray.js"
 

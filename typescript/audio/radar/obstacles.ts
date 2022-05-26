@@ -1,7 +1,7 @@
 import {Serializer} from "../../lib/common.js"
 import {TAU} from "../../lib/math.js"
 import {sdSegment, vec2} from "../../lib/sdf.js"
-import {distance, DragHandler} from "./dragging.js"
+import {distance, DragHandler} from "./utils.js"
 import {Pattern} from "./pattern.js"
 import {Ray} from "./ray.js"
 

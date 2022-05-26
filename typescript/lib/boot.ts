@@ -115,6 +115,7 @@ export const newAudioContext = (options: AudioContextOptions = {
             if (context.state !== "running") {
                 try {
                     await context.resume()
+                    console.debug('AudioContext resumed.')
                 } catch (e) {
                     return
                 }

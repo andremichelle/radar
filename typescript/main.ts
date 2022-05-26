@@ -1,8 +1,8 @@
 import {LimiterWorklet} from "./audio/limiter/worklet.js"
 import {MeterWorklet} from "./audio/meter/worklet.js"
-import {MetronomeWorklet} from "./audio/metronome/worklet.js"
 import {Editor} from "./audio/radar/editor.js"
 import {Pattern} from "./audio/radar/pattern.js"
+import {RadarWorklet} from "./audio/radar/worklet.js"
 import {Boot, newAudioContext, preloadImagesOfCssFile} from "./lib/boot.js"
 import {HTML} from "./lib/dom.js"
 import {installMenu} from "./menu.js"
@@ -34,22 +34,25 @@ const showProgress = (() => {
     const context = newAudioContext()
     boot.registerProcess(LimiterWorklet.loadModule(context))
     boot.registerProcess(MeterWorklet.loadModule(context))
-    boot.registerProcess(MetronomeWorklet.loadModule(context))
+    boot.registerProcess(RadarWorklet.loadModule(context))
     await boot.waitForCompletion()
 
     // --- BOOT ENDS ---
 
     const pattern = new Pattern()
-    pattern.addObserver(() => console.log('changed'))
-
-    const editor = new Editor()
-    editor.setPattern(pattern)
-    HTML.query('.radar').appendChild(editor.element())
 
     const buffer: AudioBuffer = await fetch('loops/dnb.ogg')
         .then(result => result.arrayBuffer())
         .then(buffer => context.decodeAudioData(buffer))
+
+    const worklet = new RadarWorklet(context, pattern)
+    worklet.setAudioBuffer(buffer)
+    worklet.connect(context.destination)
+
+    const editor = new Editor(() => worklet.getPosition())
+    editor.setPattern(pattern)
     editor.showAudioBuffer(buffer)
+    HTML.query('.radar').appendChild(editor.element())
 
     installMenu(pattern)
 

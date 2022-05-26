@@ -11,11 +11,11 @@ import {
 } from "../../lib/common.js"
 import {HTML} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
-import {DragHandler, snapAngle, snapLength} from "./dragging.js"
 import {ArcObstacle, CurveObstacle, LineObstacle, Obstacle} from "./obstacles.js"
 import {Pattern} from "./pattern.js"
 import {Point, Ray} from "./ray.js"
 import {Renderer} from "./render.js"
+import {DragHandler, snapAngle, snapLength} from "./utils.js"
 
 type Tool = 'move' | 'line' | 'arc' | 'curve'
 
@@ -37,9 +37,7 @@ export class Editor {
     private waveform: Option<ImageBitmap> = Options.None
     private hovering: Option<Obstacle<any>> = Options.None
 
-    private position: number = 0.0
-
-    constructor() {
+    constructor(private readonly position: () => number) {
         const toolGroup = new HTMLRadioGroup(HTML.query('[data-component=tools]'), 'tool')
         toolGroup.addObserver(tool => {
             this.tool.ifPresent(tool => tool.terminate())
@@ -82,6 +80,7 @@ export class Editor {
     }
 
     private update = (): void => {
+        const position = this.position()
         const canvas = this.canvas
         const context = this.context
         const clientWidth = canvas.clientWidth
@@ -98,16 +97,13 @@ export class Editor {
         this.pattern.ifPresent(pattern => {
             const origin = pattern.getOrigin()
             Renderer.renderRayOrigin(context, origin)
-            const ray = Editor.Ray.reuse(this.position * TAU, origin.x, origin.y)
+            const ray = Editor.Ray.reuse(position * TAU, origin.x, origin.y)
             Renderer.renderObstacles(context, pattern, this.hovering)
             Renderer.renderRayTrail(context, pattern, ray)
             Renderer.renderWaveformPosition(context, ray.angle(), Editor.WaveformWidth)
         })
         this.toolCursor.ifPresent(point => Renderer.renderCursor(context, point))
         context.restore()
-
-        this.position += 0.002
-        this.position -= Math.floor(this.position)
 
         requestAnimationFrame(this.update)
     }

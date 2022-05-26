@@ -1,3 +1,4 @@
+import {TAU} from "../../lib/math.js"
 import {Obstacle} from "./obstacles.js"
 
 export interface Point {
@@ -111,7 +112,8 @@ export class Ray {
     }
 
     angle() {
-        return Math.atan2(this.x, -this.y)
+        const angle = Math.atan2(this.x, -this.y)
+        return angle < 0.0 ? angle + TAU : angle
     }
 
     dot(): number {
