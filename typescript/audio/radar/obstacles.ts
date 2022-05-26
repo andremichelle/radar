@@ -2,6 +2,7 @@ import {Serializer} from "../../lib/common.js"
 import {TAU} from "../../lib/math.js"
 import {sdSegment, vec2} from "../../lib/sdf.js"
 import {distance, DragHandler} from "./dragging.js"
+import {Pattern} from "./pattern.js"
 import {Ray} from "./ray.js"
 
 const Epsilon: number = 0.00001
@@ -14,24 +15,37 @@ const drawHandler = (context: CanvasRenderingContext2D, x: number, y: number, sc
 
 export type ObstacleFormat = LineObstacleFormat | ArcObstacleFormat | CurveObstacleFormat
 
-export interface Obstacle<FORMAT extends ObstacleFormat> extends Serializer<FORMAT> {
-    capture(ray: Ray): number
+export abstract class Obstacle<FORMAT extends ObstacleFormat> implements Serializer<FORMAT> {
+    protected constructor(private readonly pattern: Pattern) {
+    }
 
-    reflect(ray: Ray): void
+    protected onChanged(): void {
+        this.pattern.onChanged(this)
+    }
 
-    paintPath(context: CanvasRenderingContext2D, scale: number): void
+    abstract capture(ray: Ray): number
 
-    paintHandler(context: CanvasRenderingContext2D, scale: number): void
+    abstract reflect(ray: Ray): void
 
-    isBoundary(): boolean
+    abstract paintPath(context: CanvasRenderingContext2D, scale: number): void
 
-    sdf(x: number, y: number): number
+    abstract paintHandler(context: CanvasRenderingContext2D, scale: number): void
 
-    dragHandlers: ReadonlyArray<DragHandler>
+    abstract isBoundary(): boolean
+
+    abstract sdf(x: number, y: number): number
+
+    abstract deserialize(format: FORMAT): Serializer<FORMAT>
+
+    abstract serialize(): FORMAT
+
+    abstract dragHandlers: ReadonlyArray<DragHandler>
 }
 
-export class OutlineObstacle implements Obstacle<ObstacleFormat> {
-    dragHandlers: ReadonlyArray<DragHandler> = []
+export class OutlineObstacle extends Obstacle<ObstacleFormat> {
+    constructor(pattern: Pattern) {
+        super(pattern)
+    }
 
     capture(ray: Ray): number {
         const ev = ray.cross()
@@ -67,6 +81,8 @@ export class OutlineObstacle implements Obstacle<ObstacleFormat> {
     serialize(): ObstacleFormat {
         throw new Error()
     }
+
+    dragHandlers: ReadonlyArray<DragHandler> = []
 }
 
 export interface LineObstacleFormat {
@@ -77,7 +93,7 @@ export interface LineObstacleFormat {
     y1: number
 }
 
-export class LineObstacle implements Obstacle<LineObstacleFormat> {
+export class LineObstacle extends Obstacle<LineObstacleFormat> {
     private x0: number
     private y0: number
     private x1: number
@@ -87,16 +103,18 @@ export class LineObstacle implements Obstacle<LineObstacleFormat> {
     private nx: number
     private ny: number
 
-    constructor(x0: number, y0: number, x1: number, y1: number) {
-        this.set(x0, y0, x1, y1)
+    constructor(pattern: Pattern) {
+        super(pattern)
     }
 
-    set(x0: number, y0: number, x1: number, y1: number): void {
+    set(x0: number, y0: number, x1: number, y1: number): this {
         this.x0 = x0
         this.y0 = y0
         this.x1 = x1
         this.y1 = y1
         this.update()
+        this.onChanged()
+        return this
     }
 
     capture(ray: Ray): number {
@@ -156,19 +174,13 @@ export class LineObstacle implements Obstacle<LineObstacleFormat> {
     readonly dragHandlers: ReadonlyArray<DragHandler> = [
         {
             distance: (x: number, y: number) => distance(x, y, this.x0, this.y0),
-            moveTo: (x: number, y: number) => {
-                this.x0 = x
-                this.y0 = y
-                this.update()
-            }, constrainToCircle: (): boolean => true
+            moveTo: (x: number, y: number) => this.set(x, y, this.x1, this.y1),
+            constrainToCircle: (): boolean => true
         },
         {
             distance: (x: number, y: number) => distance(x, y, this.x1, this.y1),
-            moveTo: (x: number, y: number) => {
-                this.x1 = x
-                this.y1 = y
-                this.update()
-            }, constrainToCircle: (): boolean => true
+            moveTo: (x: number, y: number) => this.set(this.x0, this.y0, x, y),
+            constrainToCircle: (): boolean => true
         }]
 
     private update(): void {
@@ -189,7 +201,7 @@ export interface ArcObstacleFormat {
     bend: number
 }
 
-export class ArcObstacle implements Obstacle<ArcObstacleFormat> {
+export class ArcObstacle extends Obstacle<ArcObstacleFormat> {
     private x0: number
     private y0: number
     private x1: number
@@ -204,17 +216,19 @@ export class ArcObstacle implements Obstacle<ArcObstacleFormat> {
     private angle1: number
     private angleWidth: number
 
-    constructor(x0: number, y0: number, x1: number, y1: number, bend: number) {
-        this.set(x0, y0, x1, y1, bend)
+    constructor(pattern: Pattern) {
+        super(pattern)
     }
 
-    set(x0: number, y0: number, x1: number, y1: number, bend: number): void {
+    set(x0: number, y0: number, x1: number, y1: number, bend: number): this {
         this.x0 = x0
         this.y0 = y0
         this.x1 = x1
         this.y1 = y1
         this.bend = bend
         this.update()
+        this.onChanged()
+        return this
     }
 
     capture(ray: Ray): number {
@@ -409,7 +423,7 @@ export interface CurveObstacleFormat {
     y2: number
 }
 
-export class CurveObstacle implements Obstacle<CurveObstacleFormat> {
+export class CurveObstacle extends Obstacle<CurveObstacleFormat> {
     private x0: number
     private y0: number
     private x1: number
@@ -418,17 +432,19 @@ export class CurveObstacle implements Obstacle<CurveObstacleFormat> {
     private y2: number
     private cachedT: number
 
-    constructor(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number) {
-        this.set(x0, y0, x1, y1, x2, y2)
+    constructor(pattern: Pattern) {
+        super(pattern)
     }
 
-    set(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number): void {
+    set(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number): this {
         this.x0 = x0
         this.y0 = y0
         this.x1 = x1
         this.y1 = y1
         this.x2 = x2
         this.y2 = y2
+        this.onChanged()
+        return this
     }
 
     capture(ray: Ray): number {
@@ -552,10 +568,8 @@ export class CurveObstacle implements Obstacle<CurveObstacleFormat> {
     readonly dragHandlers: ReadonlyArray<DragHandler> = [
         {
             distance: (x: number, y: number) => distance(x, y, this.x0, this.y0),
-            moveTo: (x: number, y: number) => {
-                this.x0 = x
-                this.y0 = y
-            }, constrainToCircle: (): boolean => true
+            moveTo: (x: number, y: number) => this.set(x, y, this.x1, this.y1, this.x2, this.y2),
+            constrainToCircle: (): boolean => true
         },
         {
             distance: (x: number, y: number) => distance(x, y,

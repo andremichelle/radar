@@ -154,7 +154,7 @@ export class Editor {
     }
 
     private installCreateTool<OBSTACLE extends Obstacle<any>>(
-        factory: (x0: number, y0: number) => OBSTACLE,
+        factory: (pattern: Pattern, x0: number, y0: number) => OBSTACLE,
         move: (obstacle: OBSTACLE, x0: number, y0: number, x1: number, y1: number) => void
     ): Terminable {
         const terminator = new Terminator()
@@ -175,7 +175,7 @@ export class Editor {
                 return
             }
             this.pattern.ifPresent(pattern => {
-                const obstacle: OBSTACLE = factory(x0, y0)
+                const obstacle: OBSTACLE = factory(pattern, x0, y0)
                 pattern.addObstacle(obstacle)
                 Editor.startDragging((event: MouseEvent) => {
                     const local = this.snap(this.globalToLocal(event.clientX, event.clientY), true)
@@ -192,19 +192,19 @@ export class Editor {
                 return this.installMoveTool()
             case 'line':
                 return this.installCreateTool(
-                    (x0: number, y0: number) => new LineObstacle(x0, y0, x0, y0),
+                    (pattern: Pattern, x0: number, y0: number) => new LineObstacle(pattern).set(x0, y0, x0, y0),
                     (obstacle, x0, y0, x1, y1) =>
                         obstacle.set(x0, y0, x1, y1)
                 )
             case 'arc':
                 return this.installCreateTool(
-                    (x0: number, y0: number) => new ArcObstacle(x0, y0, x0, y0, 0.0),
+                    (pattern: Pattern, x0: number, y0: number) => new ArcObstacle(pattern).set(x0, y0, x0, y0, 0.0),
                     (obstacle, x0, y0, x1, y1) =>
                         obstacle.set(x0, y0, x1, y1, 0.0)
                 )
             case 'curve':
                 return this.installCreateTool(
-                    (x0: number, y0: number) => new CurveObstacle(x0, y0, x0, y0, x0, y0),
+                    (pattern: Pattern, x0: number, y0: number) => new CurveObstacle(pattern).set(x0, y0, x0, y0, x0, y0),
                     (obstacle, x0, y0, x1, y1) =>
                         obstacle.set(x0, y0, (x0 + x1) / 2.0, (y0 + y1) / 2.0, x1, y1)
                 )
