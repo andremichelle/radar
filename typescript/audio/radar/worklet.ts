@@ -1,4 +1,5 @@
 import {ArrayUtils, Terminator} from "../../lib/common.js"
+import {TransportMessage} from "../common.js"
 import {SetAudio, SetPattern} from "./message.js"
 import {Pattern} from "./pattern.js"
 
@@ -29,6 +30,10 @@ export class RadarWorklet extends AudioWorkletNode {
         } as SetPattern)
         this.terminator.with(pattern.addObserver(updateFormat))
         updateFormat()
+    }
+
+    setTransporting(enabled: boolean) {
+        this.port.postMessage({type: enabled ? 'transport-play' : 'transport-pause'} as TransportMessage)
     }
 
     setAudioBuffer(buffer: AudioBuffer): void {

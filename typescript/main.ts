@@ -54,6 +54,9 @@ const showProgress = (() => {
     editor.showAudioBuffer(buffer)
     HTML.query('.radar').appendChild(editor.element())
 
+    const transportCheckbox: HTMLInputElement = HTML.query('[data-checkbox=transport]')
+    transportCheckbox.addEventListener('change', () => worklet.setTransporting(transportCheckbox.checked))
+
     installMenu(pattern)
 
     // prevent dragging entire document on mobile

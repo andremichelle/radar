@@ -19,8 +19,8 @@ main
       pointer-events: all
 
 form.tools
-  left: calc(50% - 304px)
-  top: calc(50% - 304px)
+  top: max(calc(50% - 336px), 0px)
+  left: max(calc(50% - 336px), 0px)
   padding: 6px 3px
   flex: 0 0 40px
   display: flex
@@ -45,14 +45,17 @@ form.tools
     display: flex
     pointer-events: all
 
+    &.separator-after
+      margin-bottom: 8px
+
     &:hover svg
       box-shadow: 0 0 1px 0 rgba(white, 0.2)
       background-color: rgba(black, 0.1)
 
-    & input[type=radio]
+    & input
       display: none
 
       &:checked + svg
         color: #CCC
-        box-shadow: 0 0 1px 0.5px hsla(180, 80%, 70%, 0.5)
+        box-shadow: 0 0 1px 0.5px hsla(180, 60%, 80%, 0.5)
         background-color: rgba(black, 0.4)

@@ -136,7 +136,7 @@ export class Renderer {
         for (let x = 0 | 0; x <= resolution; x++) {
             const indexTo = x * sep
             while (index < indexTo) {
-                const value = (ch0[index] + ch1[index]) * 0.33
+                const value = (ch0[index] + ch1[index]) * 0.37
                 index++
                 min = Math.min(min, value)
                 max = Math.max(max, value)

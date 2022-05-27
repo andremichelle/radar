@@ -34,16 +34,22 @@
             <path stroke="currentColor" stroke-width="2" fill="none"
                   d="M58 18s-25 6-25 15 13 8 13 12-24 10-28 11l1 3s30-6 30-14-13-5-13-12 23-12 23-12l-1-3Z"/>
         </svg>
+        <symbol id="play" viewBox="0 0 156 156" xmlns="http://www.w3.org/2000/svg">
+            <path stroke="none" fill="currentColor"
+                  d="M143.878 58.015 46.02 6.45c-9.816-5.172-21.348-4.838-30.848.894S0 23.122 0 34.218v87.473c0 11.096 5.672 21.142 15.172 26.874 5.018 3.028 10.601 4.549 16.2 4.549 5.001 0 10.016-1.215 14.647-3.655l97.858-51.566c7.42-3.91 12.03-11.55 12.03-19.938s-4.609-16.029-12.029-19.94zm-8.392 23.953-97.858 51.566c-4.249 2.239-9.045 2.101-13.157-.381-4.113-2.482-6.471-6.66-6.471-11.463V34.218c0-4.803 2.358-8.981 6.471-11.462C26.64 21.447 29 20.79 31.369 20.79c2.122 0 4.251.527 6.259 1.585l97.858 51.565c2.186 1.152 2.422 3.191 2.422 4.014s-.236 2.862-2.422 4.014z"/>
+        </symbol>
     </defs>
 </svg>
 <main class="invisible">
     <nav id="app-menu">
         <button data-menu="file">File</button>
-        <button data-menu="edit">Edit</button>
-        <button data-menu="view">View</button>
     </nav>
     <div class="radar">
         <form class="tools" data-component="tools">
+            <label class="separator-after">
+                <input type="checkbox" data-checkbox="transport">
+                <svg><use href="#play"></use></svg>
+            </label>
             <label>
                 <input type="radio" name="tool" value="move" checked>
                 <svg><use href="#move"></use></svg>
