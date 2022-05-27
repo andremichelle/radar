@@ -9,10 +9,11 @@ import {installMenu} from "./menu.js"
 
 /**
  * TODO
+ * [ ] Bug when bezier control point is outside inner radar circle > bad capture (bug-001.json)
  * [ ] Delete shapes
+ * [ ] Draw empty waveform when no buffer is available
  * [ ] loop bpm / duration in bars
  * [ ] Time-stretcher with transient duration detection or best correlation
- * [ ] Reset origin
  * [ ] Keyboard shortcuts (move, create, escape)
  */
 
@@ -41,18 +42,23 @@ const showProgress = (() => {
 
     const pattern = new Pattern()
 
-    const buffer: AudioBuffer = await fetch('loops/dnb.ogg')
-        .then(result => result.arrayBuffer())
-        .then(buffer => context.decodeAudioData(buffer))
-
     const worklet = new RadarWorklet(context, pattern)
-    worklet.setAudioBuffer(buffer)
     worklet.connect(context.destination)
 
     const editor = new Editor(() => worklet.getPosition())
     editor.setPattern(pattern)
-    editor.showAudioBuffer(buffer)
     HTML.query('.radar').appendChild(editor.element())
+
+    pattern.addFileObserver(async fileName => {
+        const buffer: AudioBuffer = await fetch(`loops/${fileName}`)
+            .then(result => result.arrayBuffer())
+            .then(buffer => context.decodeAudioData(buffer))
+            .catch(() => null)
+        if (buffer !== null) {
+            worklet.setAudioBuffer(buffer)
+            editor.showAudioBuffer(buffer)
+        }
+    })
 
     const transportCheckbox: HTMLInputElement = HTML.query('[data-checkbox=transport]')
     transportCheckbox.addEventListener('change', () => worklet.setTransporting(transportCheckbox.checked))

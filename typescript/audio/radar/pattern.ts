@@ -1,17 +1,27 @@
-import {Observable, ObservableImpl, Observer, Serializer, Terminable, Terminator} from "../../lib/common.js"
-import {distance, DragHandler} from "./utils.js"
+import {
+    Observable,
+    ObservableImpl,
+    ObservableValueImpl,
+    Observer,
+    Serializer,
+    Terminable,
+    Terminator
+} from "../../lib/common.js"
 import {ArcObstacle, CurveObstacle, LineObstacle, Obstacle, ObstacleFormat, OutlineObstacle} from "./obstacles.js"
 import {Point} from "./ray.js"
+import {distance, DragHandler} from "./utils.js"
 
 export interface PatternFormat {
     origin: { x: number, y: number }
     obstacles: ObstacleFormat[]
+    file: string
 }
 
 export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
     private readonly terminator: Terminator = new Terminator()
     private readonly observable: ObservableImpl<Pattern> = this.terminator.with(new ObservableImpl<Pattern>())
     private readonly origin: Point = {x: 0.0, y: 0.0}
+    private readonly file: ObservableValueImpl<string> = new ObservableValueImpl<string>('dnb.ogg')
     private readonly obstacles: Obstacle<any>[] = [new OutlineObstacle(this)]
 
     addObstacle(obstacle: Obstacle<any>): void {
@@ -53,6 +63,10 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
         return this.observable.addObserver(observer)
     }
 
+    addFileObserver(observer: Observer<string>): Terminable {
+        return this.file.addObserver(observer, true)
+    }
+
     removeObserver(observer: Observer<Pattern>): boolean {
         return this.observable.removeObserver(observer)
     }
@@ -69,6 +83,7 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
                 return new CurveObstacle(this).set(format.x0, format.y0, format.x1, format.y1, format.x2, format.y2)
             }
         }))
+        this.file.set(format.file)
         this.observable.notify(this)
         return this
     }
@@ -78,7 +93,8 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
             origin: {x: this.origin.x, y: this.origin.y},
             obstacles: this.obstacles
                 .slice(1)
-                .map(obstacle => obstacle.serialize())
+                .map(obstacle => obstacle.serialize()),
+            file: this.file.get()
         }
     }
 
