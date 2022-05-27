@@ -21,7 +21,7 @@ type Tool = 'move' | 'line' | 'arc' | 'curve'
 
 export class Editor {
     private static Ray: Ray = new Ray()
-    private static WaveformWidth: number = 48
+    private static WaveformWidth: number = 64
     private static Radius: number = Renderer.Radius + Editor.WaveformWidth
     private static Size: number = Editor.Radius << 1
     private static CaptureRadius = 8.0 / Renderer.Radius

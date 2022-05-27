@@ -14,7 +14,6 @@ const WaveformPositionStyle = Colors[4]
 
 export class Renderer {
     static Radius: number = 256
-    static Diameter: number = Renderer.Radius << 1
 
     static renderRadarInside(context: CanvasRenderingContext2D, angleResolution: number, distanceResolution: number): void {
         context.fillStyle = 'rgba(0, 0, 0, 0.4)'
@@ -66,7 +65,7 @@ export class Renderer {
         pattern
             .getObstacles()
             .forEach(obstacle => {
-                if(highlight.contains(obstacle)) {
+                if (highlight.contains(obstacle)) {
                     context.fillStyle = context.strokeStyle = 'white'
                 } else {
                     context.fillStyle = context.strokeStyle = ObstacleStyle
@@ -114,7 +113,7 @@ export class Renderer {
         const context = canvas.getContext('2d')
         const radius = size >> 1
         const rr = radius - width
-        const resolution = Math.floor(radius * TAU) | 0
+        const resolution = Math.floor(radius * TAU * 2) | 0
         context.translate(radius, radius)
         context.fillStyle = 'rgba(0, 0, 0, 0.8)'
         context.beginPath()
