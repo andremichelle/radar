@@ -1,9 +1,9 @@
 import {Serializer} from "../../lib/common.js"
 import {TAU} from "../../lib/math.js"
 import {sdSegment, vec2} from "../../lib/sdf.js"
-import {distance, DragHandler} from "./utils.js"
 import {Pattern} from "./pattern.js"
 import {Ray} from "./ray.js"
+import {distance, DragHandler} from "./utils.js"
 
 const Epsilon: number = 0.00001
 
@@ -20,7 +20,7 @@ export abstract class Obstacle<FORMAT extends ObstacleFormat> implements Seriali
     }
 
     protected onChanged(): void {
-        this.pattern.onChanged(this)
+        this.pattern.onChanged()
     }
 
     abstract capture(ray: Ray): number
@@ -575,17 +575,15 @@ export class CurveObstacle extends Obstacle<CurveObstacleFormat> {
             distance: (x: number, y: number) => distance(x, y,
                 this.x1 * 0.5 + 0.25 * (this.x0 + this.x2),
                 this.y1 * 0.5 + 0.25 * (this.y0 + this.y2)),
-            moveTo: (x: number, y: number) => {
-                this.x1 = 2.0 * x - 0.5 * (this.x0 + this.x2)
-                this.y1 = 2.0 * y - 0.5 * (this.y0 + this.y2)
-            }, constrainToCircle: (): boolean => false
+            moveTo: (x: number, y: number) => this.set(this.x0, this.y0,
+                2.0 * x - 0.5 * (this.x0 + this.x2),
+                2.0 * y - 0.5 * (this.y0 + this.y2), this.x2, this.y2),
+            constrainToCircle: (): boolean => false
         },
         {
             distance: (x: number, y: number) => distance(x, y, this.x2, this.y2),
-            moveTo: (x: number, y: number) => {
-                this.x2 = x
-                this.y2 = y
-            }, constrainToCircle: (): boolean => true
+            moveTo: (x: number, y: number) => this.set(this.x0, this.y0, this.x1, this.y1, x, y),
+            constrainToCircle: (): boolean => true
         }]
 
     private advanceDistance(t: number, ray: Ray): number {

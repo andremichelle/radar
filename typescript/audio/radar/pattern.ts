@@ -45,7 +45,7 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
         this.observable.notify(this)
     }
 
-    onChanged(obstacle: Obstacle<any>): void {
+    onChanged(): void {
         this.observable.notify(this)
     }
 
