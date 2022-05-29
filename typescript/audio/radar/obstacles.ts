@@ -33,7 +33,7 @@ export abstract class Obstacle<FORMAT extends ObstacleFormat> implements Seriali
 
     abstract isBoundary(): boolean
 
-    abstract sdf(x: number, y: number): number
+    abstract distance(x: number, y: number): number
 
     abstract deserialize(format: FORMAT): Serializer<FORMAT>
 
@@ -70,7 +70,7 @@ export class OutlineObstacle extends Obstacle<ObstacleFormat> {
         return true
     }
 
-    sdf(x: number, y: number): number {
+    distance(x: number, y: number): number {
         return Number.MAX_VALUE
     }
 
@@ -152,7 +152,7 @@ export class LineObstacle extends Obstacle<LineObstacleFormat> {
         return false
     }
 
-    sdf(x: number, y: number): number {
+    distance(x: number, y: number): number {
         return sdSegment(new vec2(x, y), new vec2(this.x0, this.y0), new vec2(this.x1, this.y1))
     }
 
@@ -338,7 +338,7 @@ export class ArcObstacle extends Obstacle<ArcObstacleFormat> {
         return false
     }
 
-    sdf(x: number, y: number): number {
+    distance(x: number, y: number): number {
         let min = Number.MAX_VALUE
         min = Math.min(min, distance(x, y, this.x0, this.y0))
         min = Math.min(min, distance(x, y, this.x1, this.y1))
@@ -542,7 +542,7 @@ export class CurveObstacle extends Obstacle<CurveObstacleFormat> {
         return false
     }
 
-    sdf(x: number, y: number): number {
+    distance(x: number, y: number): number {
         const n = 100
         let min = Number.MAX_VALUE
         for (let i = 0; i <= n; i++) {

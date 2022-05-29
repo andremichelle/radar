@@ -110,21 +110,21 @@ export class Editor {
 
     private installMoveTool(): Terminable {
         const terminator = new Terminator()
-        terminator.with(Events.bindEventListener(this.canvas, 'mousemove', (event: MouseEvent) => {
+        terminator.with(Events.bindEventListener(this.canvas, 'pointermove', (event: MouseEvent) => {
             const {x, y} = this.globalToLocal(event.clientX, event.clientY)
             this.hovering = this.pattern.map(pattern =>
                 pattern
                     .getObstacles()
                     .reduce((prev: Obstacle<any>, next: Obstacle<any>) => {
-                        const distance = next.sdf(x, y)
+                        const distance = next.distance(x, y)
                         return prev === null
                             ? distance < Editor.CaptureRadius
-                                ? next : null : distance < prev.sdf(x, y)
+                                ? next : null : distance < prev.distance(x, y)
                                 ? next : prev
                     }, null))
         }))
         terminator.with({terminate: () => this.hovering = Options.None})
-        terminator.with(Events.bindEventListener(this.canvas, 'mousedown', (event: MouseEvent) => {
+        terminator.with(Events.bindEventListener(this.canvas, 'pointerdown', (event: MouseEvent) => {
             const local = this.globalToLocal(event.clientX, event.clientY)
             this.pattern.ifPresent(pattern => {
                 const handler: DragHandler | null = pattern
@@ -154,7 +154,7 @@ export class Editor {
         move: (obstacle: OBSTACLE, x0: number, y0: number, x1: number, y1: number) => void
     ): Terminable {
         const terminator = new Terminator()
-        terminator.with(Events.bindEventListener(this.canvas, 'mousemove', (event: MouseEvent) => {
+        terminator.with(Events.bindEventListener(this.canvas, 'pointermove', (event: MouseEvent) => {
             const local = this.snap(this.globalToLocal(event.clientX, event.clientY), true)
             if (this.toolCursor.isEmpty()) {
                 this.toolCursor = Options.valueOf(local)
@@ -165,7 +165,7 @@ export class Editor {
             }
         }))
         terminator.with({terminate: () => this.toolCursor = Options.None})
-        terminator.with(Events.bindEventListener(this.canvas, 'mousedown', (event: MouseEvent) => {
+        terminator.with(Events.bindEventListener(this.canvas, 'pointerdown', (event: MouseEvent) => {
             const {x: x0, y: y0} = this.snap(this.globalToLocal(event.clientX, event.clientY), false)
             if (x0 * x0 + y0 * y0 > 1.0) {
                 return
@@ -210,8 +210,8 @@ export class Editor {
     }
 
     private static startDragging(move: (event: MouseEvent) => void) {
-        window.addEventListener('mousemove', move)
-        window.addEventListener('mouseup', () =>
-            window.removeEventListener('mousemove', move), {once: true})
+        window.addEventListener('pointermove', move)
+        window.addEventListener('pointerup', () =>
+            window.removeEventListener('pointermove', move), {once: true})
     }
 }

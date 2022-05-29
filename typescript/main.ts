@@ -9,7 +9,6 @@ import {installMenu} from "./menu.js"
 
 /**
  * TODO
- * [ ] Bug when bezier control point is outside inner radar circle > bad capture (bug-001.json)
  * [ ] Delete shapes
  * [ ] Draw empty waveform when no buffer is available
  * [ ] loop bpm / duration in bars
