@@ -64,10 +64,10 @@ export class Ray {
     step(obstacles: ReadonlyArray<Obstacle<any>>): Touch {
         let closestObstacle: Obstacle<any> = null
         let closestDistance = Number.MAX_VALUE
-        obstacles.forEach(modifier => {
-            const distance = modifier.capture(this)
+        obstacles.forEach(obstacle => {
+            const distance = obstacle.trace(this)
             if (distance > 0.0 && distance <= closestDistance) {
-                closestObstacle = modifier
+                closestObstacle = obstacle
                 closestDistance = distance
             }
         })

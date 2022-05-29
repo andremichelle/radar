@@ -23,7 +23,7 @@ export abstract class Obstacle<FORMAT extends ObstacleFormat> implements Seriali
         this.pattern.onChanged()
     }
 
-    abstract capture(ray: Ray): number
+    abstract trace(ray: Ray): number
 
     abstract reflect(ray: Ray): void
 
@@ -47,7 +47,7 @@ export class OutlineObstacle extends Obstacle<ObstacleFormat> {
         super(pattern)
     }
 
-    capture(ray: Ray): number {
+    trace(ray: Ray): number {
         const ev = ray.cross()
         const sq = Ray.Epsilon - ev * ev
         console.assert(sq >= 0.0)
@@ -117,7 +117,7 @@ export class LineObstacle extends Obstacle<LineObstacleFormat> {
         return this
     }
 
-    capture(ray: Ray): number {
+    trace(ray: Ray): number {
         const ud = this.dy * ray.vx - this.dx * ray.vy
         const px = this.x0 - ray.x
         const py = this.y0 - ray.y
@@ -207,8 +207,8 @@ export class ArcObstacle extends Obstacle<ArcObstacleFormat> {
     private x1: number
     private y1: number
     private bend: number
-    private x2: number
-    private y2: number
+    private bx: number
+    private by: number
     private cx: number
     private cy: number
     private radius: number
@@ -231,7 +231,7 @@ export class ArcObstacle extends Obstacle<ArcObstacleFormat> {
         return this
     }
 
-    capture(ray: Ray): number {
+    trace(ray: Ray): number {
         if (this.appearsAsLine()) {
             const dx = this.x1 - this.x0
             const dy = this.y1 - this.y0
@@ -331,7 +331,7 @@ export class ArcObstacle extends Obstacle<ArcObstacleFormat> {
     paintHandler(context: CanvasRenderingContext2D, scale: number): void {
         drawHandler(context, this.x0, this.y0, scale)
         drawHandler(context, this.x1, this.y1, scale)
-        drawHandler(context, this.x2, this.y2, scale)
+        drawHandler(context, this.bx, this.by, scale)
     }
 
     isBoundary(): boolean {
@@ -339,7 +339,15 @@ export class ArcObstacle extends Obstacle<ArcObstacleFormat> {
     }
 
     sdf(x: number, y: number): number {
-        return Number.MAX_VALUE
+        let min = Number.MAX_VALUE
+        min = Math.min(min, distance(x, y, this.x0, this.y0))
+        min = Math.min(min, distance(x, y, this.x1, this.y1))
+        let angle = Math.atan2(y - this.cy, x - this.cx) - this.angle0
+        while (angle < 0.0) angle += TAU
+        if (angle < this.angleWidth) {
+            min = Math.min(min, Math.abs(distance(x, y, this.cx, this.cy) - this.radius))
+        }
+        return min
     }
 
     deserialize(format: ArcObstacleFormat): Serializer<ArcObstacleFormat> {
@@ -370,7 +378,7 @@ export class ArcObstacle extends Obstacle<ArcObstacleFormat> {
             constrainToCircle: (): boolean => true
         },
         {
-            distance: (x: number, y: number) => distance(x, y, this.x2, this.y2),
+            distance: (x: number, y: number) => distance(x, y, this.bx, this.by),
             moveTo: (x: number, y: number) => {
                 const dx = this.x1 - this.x0
                 const dy = this.y1 - this.y0
@@ -388,13 +396,13 @@ export class ArcObstacle extends Obstacle<ArcObstacleFormat> {
     private update(): void {
         const dx = this.x1 - this.x0
         const dy = this.y1 - this.y0
-        this.x2 = this.x0 + 0.5 * (dx + dy * this.bend)
-        this.y2 = this.y0 + 0.5 * (dy - dx * this.bend)
-        const a1 = 2.0 * (this.x2 - this.x1)
-        const b1 = 0.5 / (this.y2 - this.y1)
+        this.bx = this.x0 + 0.5 * (dx + dy * this.bend)
+        this.by = this.y0 + 0.5 * (dy - dx * this.bend)
+        const a1 = 2.0 * (this.bx - this.x1)
+        const b1 = 0.5 / (this.by - this.y1)
         const a2 = 2.0 * (this.x0 - this.x1)
         const b2 = 2.0 * (this.y0 - this.y1)
-        const c1 = (this.x2 * this.x2 - this.x1 * this.x1) + (this.y2 * this.y2 - this.y1 * this.y1)
+        const c1 = (this.bx * this.bx - this.x1 * this.x1) + (this.by * this.by - this.y1 * this.y1)
         const c2 = (this.x0 * this.x0 - this.x1 * this.x1) + (this.y0 * this.y0 - this.y1 * this.y1)
         this.cx = (c2 - b2 * c1 * b1) / (a2 - b2 * a1 * b1)
         this.cy = (c1 - a1 * this.cx) * b1
@@ -447,7 +455,7 @@ export class CurveObstacle extends Obstacle<CurveObstacleFormat> {
         return this
     }
 
-    capture(ray: Ray): number {
+    trace(ray: Ray): number {
         const cx1: number = (this.x1 - this.x0) * 2.0
         const cy1: number = (this.y1 - this.y0) * 2.0
         const cx2: number = this.x0 - this.x1 * 2.0 + this.x2
@@ -535,14 +543,13 @@ export class CurveObstacle extends Obstacle<CurveObstacleFormat> {
     }
 
     sdf(x: number, y: number): number {
+        const n = 100
         let min = Number.MAX_VALUE
-        for (let i = 0; i <= 50; i++) {
-            const t = i * 0.02
+        for (let i = 0; i <= n; i++) {
+            const t = i / n
             const t1 = 1.0 - t
-            const cx = t1 * t1 * this.x0 + 2.0 * t * t1 * this.x1 + t * t * this.x2
-            const cy = t1 * t1 * this.y0 + 2.0 * t * t1 * this.y1 + t * t * this.y2
-            const dx = x - cx
-            const dy = y - cy
+            const dx = x - (t1 * t1 * this.x0 + 2.0 * t * t1 * this.x1 + t * t * this.x2)
+            const dy = y - (t1 * t1 * this.y0 + 2.0 * t * t1 * this.y1 + t * t * this.y2)
             min = Math.min(min, dx * dx + dy * dy)
         }
         return Math.sqrt(min)
