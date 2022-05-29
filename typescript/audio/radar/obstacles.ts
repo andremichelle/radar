@@ -126,7 +126,7 @@ export class LineObstacle extends Obstacle<LineObstacleFormat> {
             return Number.MAX_VALUE
         }
         const ua = (ray.vy * px - ray.vx * py) / ud
-        if (ua < 0.0 || ua > 1.0) {
+        if (ua < Epsilon || ua > 1.0 - Epsilon) {
             return Number.MAX_VALUE
         }
         return dt
@@ -245,7 +245,7 @@ export class ArcObstacle extends Obstacle<ArcObstacleFormat> {
                 return Number.MAX_VALUE
             }
             const ua = (ray.vy * px - ray.vx * py) / ud
-            if (ua < 0.0 || ua > 1.0) {
+            if (ua < Epsilon || ua > 1.0 - Epsilon) {
                 return Number.MAX_VALUE
             }
             return dt

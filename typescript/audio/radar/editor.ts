@@ -122,8 +122,10 @@ export class Editor {
             this.pattern.ifPresent(pattern => {
                 const handler: DragHandler | null = this.closestDragHandler(pattern, x, y)
                 if (handler !== null) {
-                    this.selection.splice(0, this.selection.length, handler.obstacle)
-                    Editor.startDragging((event: PointerEvent) => {
+                    if (handler.obstacle !== null) {
+                        this.selection.splice(0, this.selection.length, handler.obstacle)
+                    }
+                    this.startDragging(event, (event: PointerEvent) => {
                         const local = this.snap(this.globalToLocal(event.clientX, event.clientY), handler.constrainToCircle())
                         handler.moveTo(local.x, local.y)
                     })
@@ -163,7 +165,7 @@ export class Editor {
             this.pattern.ifPresent(pattern => {
                 const obstacle: OBSTACLE = factory(pattern, x0, y0)
                 pattern.addObstacle(obstacle)
-                Editor.startDragging((event: PointerEvent) => {
+                this.startDragging(event, (event: PointerEvent) => {
                     const local = this.snap(this.globalToLocal(event.clientX, event.clientY), true)
                     move(obstacle, x0, y0, local.x, local.y)
                 })
@@ -173,6 +175,7 @@ export class Editor {
     }
 
     private switchTool(tool: Tool): Terminable {
+        console.debug(`switchTool(${tool})`)
         switch (tool) {
             case 'move':
                 return this.installMoveTool()
@@ -199,10 +202,11 @@ export class Editor {
         }
     }
 
-    private static startDragging(move: (event: PointerEvent) => void) {
-        window.addEventListener('pointermove', move)
-        window.addEventListener('pointerup', () =>
-            window.removeEventListener('pointermove', move), {once: true})
+    private startDragging(event: PointerEvent, move: (event: PointerEvent) => void) {
+        this.canvas.setPointerCapture(event.pointerId)
+        this.canvas.addEventListener('pointermove', move)
+        this.canvas.addEventListener('pointerup', () =>
+            this.canvas.removeEventListener('pointermove', move), {once: true})
     }
 
     private closestObstacle(pattern: Pattern, x: number, y: number): Obstacle<any> | null {

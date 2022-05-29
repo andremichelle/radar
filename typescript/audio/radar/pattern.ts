@@ -109,6 +109,7 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
             this.origin.x = x
             this.origin.y = y
             this.observable.notify(this)
-        }, constrainToCircle: (): boolean => true
+        }, constrainToCircle: (): boolean => true,
+        obstacle: null
     }]
 }

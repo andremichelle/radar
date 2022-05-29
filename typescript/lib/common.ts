@@ -475,8 +475,11 @@ export class HTMLRadioGroup implements ObservableValue<string> {
 
     constructor(private readonly form: HTMLFormElement, private readonly name: string) {
         this.terminator.with(Events.bindEventListener(this.form, 'change', (event: Event): void => {
-            if (event.target instanceof HTMLInputElement) {
-                this.observable.notify(event.target.value)
+            const inputElement = event.target
+            if (inputElement instanceof HTMLInputElement) {
+                if (inputElement.name === name) {
+                    this.observable.notify(inputElement.value)
+                }
             }
         }))
     }
