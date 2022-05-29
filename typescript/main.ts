@@ -9,6 +9,7 @@ import {installMenu} from "./menu.js"
 
 /**
  * TODO
+ * [ ] Sometimes capturing just breaks (BUG)
  * [ ] Draw empty waveform when no buffer is available
  * [ ] loop bpm / duration in bars
  * [ ] Time-stretcher with transient duration detection or best correlation

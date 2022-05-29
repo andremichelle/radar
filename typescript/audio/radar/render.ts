@@ -58,8 +58,7 @@ export class Renderer {
     }
 
     static renderObstacles(context: CanvasRenderingContext2D, pattern: Pattern, selection: Obstacle<any>[]): void {
-        context.fillStyle = ObstacleStyle
-        context.strokeStyle = ObstacleStyle
+        context.fillStyle = context.strokeStyle = ObstacleStyle
         context.lineWidth = 0.0
         pattern
             .getObstacles()
@@ -71,6 +70,7 @@ export class Renderer {
                 }
                 obstacle.paintPath(context, Renderer.Radius)
             })
+        context.fillStyle = context.strokeStyle = ObstacleStyle
         pattern
             .getObstacles()
             .forEach(obstacle => obstacle.paintHandler(context, Renderer.Radius))
