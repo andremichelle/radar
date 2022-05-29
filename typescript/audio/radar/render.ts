@@ -1,4 +1,3 @@
-import {Option} from "../../lib/common.js"
 import {Colors} from "../../lib/dom.js"
 import {TAU} from "../../lib/math.js"
 import {Obstacle} from "./obstacles.js"
@@ -58,14 +57,14 @@ export class Renderer {
         context.fillStyle = 'none'
     }
 
-    static renderObstacles(context: CanvasRenderingContext2D, pattern: Pattern, highlight: Option<Obstacle<any>>): void {
+    static renderObstacles(context: CanvasRenderingContext2D, pattern: Pattern, selection: Obstacle<any>[]): void {
         context.fillStyle = ObstacleStyle
         context.strokeStyle = ObstacleStyle
         context.lineWidth = 0.0
         pattern
             .getObstacles()
             .forEach(obstacle => {
-                if (highlight.contains(obstacle)) {
+                if (selection.includes(obstacle)) {
                     context.fillStyle = context.strokeStyle = 'white'
                 } else {
                     context.fillStyle = context.strokeStyle = ObstacleStyle

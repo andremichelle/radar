@@ -9,7 +9,6 @@ import {installMenu} from "./menu.js"
 
 /**
  * TODO
- * [ ] Delete shapes
  * [ ] Draw empty waveform when no buffer is available
  * [ ] loop bpm / duration in bars
  * [ ] Time-stretcher with transient duration detection or best correlation
@@ -62,7 +61,7 @@ const showProgress = (() => {
     const transportCheckbox: HTMLInputElement = HTML.query('[data-checkbox=transport]')
     transportCheckbox.addEventListener('change', () => worklet.setTransporting(transportCheckbox.checked))
 
-    installMenu(pattern)
+    installMenu(editor, pattern)
 
     // prevent dragging entire document on mobile
     document.addEventListener('touchmove', (event: TouchEvent) => event.preventDefault(), {passive: false})

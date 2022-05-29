@@ -1,4 +1,5 @@
 import {TAU} from "../../lib/math.js"
+import {Obstacle} from "./obstacles.js"
 
 export interface DragHandler {
     distance(x: number, y: number): number
@@ -6,6 +7,8 @@ export interface DragHandler {
     moveTo(x: number, y: number): void
 
     constrainToCircle(): boolean
+
+    readonly obstacle: Obstacle<any>
 }
 
 export const distance = (x0: number, y0: number, x1: number, y1: number): number => {

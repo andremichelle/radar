@@ -175,12 +175,14 @@ export class LineObstacle extends Obstacle<LineObstacleFormat> {
         {
             distance: (x: number, y: number) => distance(x, y, this.x0, this.y0),
             moveTo: (x: number, y: number) => this.set(x, y, this.x1, this.y1),
-            constrainToCircle: (): boolean => true
+            constrainToCircle: (): boolean => true,
+            obstacle: this
         },
         {
             distance: (x: number, y: number) => distance(x, y, this.x1, this.y1),
             moveTo: (x: number, y: number) => this.set(this.x0, this.y0, x, y),
-            constrainToCircle: (): boolean => true
+            constrainToCircle: (): boolean => true,
+            obstacle: this
         }]
 
     private update(): void {
@@ -370,12 +372,14 @@ export class ArcObstacle extends Obstacle<ArcObstacleFormat> {
         {
             distance: (x: number, y: number) => distance(x, y, this.x0, this.y0),
             moveTo: (x: number, y: number) => this.set(x, y, this.x1, this.y1, this.bend),
-            constrainToCircle: (): boolean => true
+            constrainToCircle: (): boolean => true,
+            obstacle: this
         },
         {
             distance: (x: number, y: number) => distance(x, y, this.x1, this.y1),
             moveTo: (x: number, y: number) => this.set(this.x0, this.y0, x, y, this.bend),
-            constrainToCircle: (): boolean => true
+            constrainToCircle: (): boolean => true,
+            obstacle: this
         },
         {
             distance: (x: number, y: number) => distance(x, y, this.bx, this.by),
@@ -386,7 +390,8 @@ export class ArcObstacle extends Obstacle<ArcObstacleFormat> {
                 const cy = this.y0 + dy * 0.5
                 const bend = 2.0 * (dy * (x - cx) - dx * (y - cy)) / (dx * dx + dy * dy)
                 this.set(this.x0, this.y0, this.x1, this.y1, bend)
-            }, constrainToCircle: (): boolean => false
+            }, constrainToCircle: (): boolean => false,
+            obstacle: this
         }]
 
     private appearsAsLine(): boolean {
@@ -576,7 +581,8 @@ export class CurveObstacle extends Obstacle<CurveObstacleFormat> {
         {
             distance: (x: number, y: number) => distance(x, y, this.x0, this.y0),
             moveTo: (x: number, y: number) => this.set(x, y, this.x1, this.y1, this.x2, this.y2),
-            constrainToCircle: (): boolean => true
+            constrainToCircle: (): boolean => true,
+            obstacle: this
         },
         {
             distance: (x: number, y: number) => distance(x, y,
@@ -585,12 +591,14 @@ export class CurveObstacle extends Obstacle<CurveObstacleFormat> {
             moveTo: (x: number, y: number) => this.set(this.x0, this.y0,
                 2.0 * x - 0.5 * (this.x0 + this.x2),
                 2.0 * y - 0.5 * (this.y0 + this.y2), this.x2, this.y2),
-            constrainToCircle: (): boolean => false
+            constrainToCircle: (): boolean => false,
+            obstacle: this
         },
         {
             distance: (x: number, y: number) => distance(x, y, this.x2, this.y2),
             moveTo: (x: number, y: number) => this.set(this.x0, this.y0, this.x1, this.y1, x, y),
-            constrainToCircle: (): boolean => true
+            constrainToCircle: (): boolean => true,
+            obstacle: this
         }]
 
     private advanceDistance(t: number, ray: Ray): number {
