@@ -1,6 +1,7 @@
 import {
     Observable,
     ObservableImpl,
+    ObservableValue,
     ObservableValueImpl,
     Observer,
     Serializer,
@@ -22,7 +23,14 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
     private readonly observable: ObservableImpl<Pattern> = this.terminator.with(new ObservableImpl<Pattern>())
     private readonly origin: Point = {x: 0.0, y: 0.0}
     private readonly file: ObservableValueImpl<string> = new ObservableValueImpl<string>('dnb.ogg')
+    private readonly bpm: ObservableValueImpl<number> = new ObservableValueImpl<number>(120.0)
+    private readonly bar: ObservableValueImpl<number> = new ObservableValueImpl<number>(4)
     private readonly obstacles: Obstacle<any>[] = [new OutlineObstacle(this)]
+
+    constructor() {
+        this.terminator.with(this.bar.addObserver(() => this.observable.notify(this)))
+        this.terminator.with(this.bpm.addObserver(() => this.observable.notify(this)))
+    }
 
     addObstacle(obstacle: Obstacle<any>): void {
         this.obstacles.push(obstacle)
@@ -42,6 +50,14 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
 
     getOrigin(): Readonly<Point> {
         return this.origin
+    }
+
+    getBarValue(): ObservableValue<number> {
+        return this.bar
+    }
+
+    getBpmValue(): ObservableValue<number> {
+        return this.bpm
     }
 
     clearObstacles(): void {

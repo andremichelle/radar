@@ -1,7 +1,9 @@
 // noinspection JSUnusedGlobalSymbols
 
 import {ValueMapping} from "./mapping.js"
-import {Random} from "./math"
+import {Random} from "./math.js"
+
+export type NoArgType<T> = { new(): T }
 
 export interface Terminable {
     terminate(): void
@@ -165,6 +167,28 @@ export class ObservableValueImpl<T> implements ObservableValue<T> {
 
     terminate(): void {
         this.observable.terminate()
+    }
+}
+
+export class ObservableValueVoid implements ObservableValue<any> {
+    static Instance = new ObservableValueVoid()
+
+    addObserver(observer: Observer<any>): Terminable {
+        return TerminableVoid
+    }
+
+    get(): any {
+    }
+
+    removeObserver(observer: Observer<any>): boolean {
+        return false
+    }
+
+    set(value: any): boolean {
+        return true
+    }
+
+    terminate(): void {
     }
 }
 
@@ -466,6 +490,31 @@ export class Events {
                              options?: AddEventListenerOptions): Terminable {
         target.addEventListener(type, listener, options)
         return {terminate: () => target.removeEventListener(type, listener, options)}
+    }
+
+    static configRepeatButton(button, callback): Terminable {
+        const mouseDownListener = () => {
+            let lastTime = Date.now()
+            let delay = 500.0
+            const repeat = () => {
+                if (!isNaN(lastTime)) {
+                    if (Date.now() - lastTime > delay) {
+                        lastTime = Date.now()
+                        delay *= 0.75
+                        callback()
+                    }
+                    requestAnimationFrame(repeat)
+                }
+            }
+            requestAnimationFrame(repeat)
+            callback()
+            window.addEventListener("mouseup", () => {
+                lastTime = NaN
+                delay = Number.MAX_VALUE
+            }, {once: true})
+        }
+        button.addEventListener("mousedown", mouseDownListener)
+        return {terminate: () => button.removeEventListener("mousedown", mouseDownListener)}
     }
 }
 

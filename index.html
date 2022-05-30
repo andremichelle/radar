@@ -46,6 +46,7 @@
         <button data-menu="edit">Edit</button>
     </nav>
     <div class="radar">
+        <canvas></canvas>
         <form class="tools" data-component="tools">
             <label class="separator-after">
                 <input type="checkbox" data-checkbox="transport">
@@ -68,6 +69,10 @@
                 <svg><use href="#curve"></use></svg>
             </label>
         </form>
+        <div class="controls" data-component="controls">
+            <div class="two-columns" data-component="pattern"></div>
+            <div class="two-columns" data-component="snapping"></div>
+        </div>
     </div>
 </main>
 <svg class="preloader" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">

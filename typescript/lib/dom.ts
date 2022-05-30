@@ -35,8 +35,8 @@ export class HTML {
         return element
     }
 
-    static query<E extends Element>(selectors: string): E {
-        const element = document.querySelector(selectors)
+    static query<E extends Element>(selectors: string, inside: ParentNode = document): E {
+        const element = inside.querySelector(selectors)
         if (selectors === null) {
             throw new Error(`'${selectors}' not found.`)
         }

@@ -5,7 +5,7 @@ import {Pattern} from "./audio/radar/pattern.js"
 import {RadarWorklet} from "./audio/radar/worklet.js"
 import {Boot, newAudioContext, preloadImagesOfCssFile} from "./lib/boot.js"
 import {HTML} from "./lib/dom.js"
-import {installMenu} from "./menu.js"
+import {installMenu, installShortcuts} from "./menu.js"
 
 /**
  * TODO
@@ -44,9 +44,7 @@ const showProgress = (() => {
     const worklet = new RadarWorklet(context, pattern)
     worklet.connect(context.destination)
 
-    const editor = new Editor(() => worklet.getPosition())
-    editor.setPattern(pattern)
-    HTML.query('.radar').appendChild(editor.element())
+    const editor = new Editor(HTML.query('.radar'), pattern, () => worklet.getPosition())
 
     pattern.addFileObserver(async fileName => {
         const buffer: AudioBuffer = await fetch(`loops/${fileName}`)
@@ -63,6 +61,7 @@ const showProgress = (() => {
     transportCheckbox.addEventListener('change', () => worklet.setTransporting(transportCheckbox.checked))
 
     installMenu(editor, pattern)
+    installShortcuts(editor, pattern)
 
     // prevent dragging entire document on mobile
     document.addEventListener('touchmove', (event: TouchEvent) => event.preventDefault(), {passive: false})

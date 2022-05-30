@@ -59,3 +59,11 @@ export const installMenu = (editor: Editor, pattern: Pattern): void => {
             }))
 
 }
+
+export const installShortcuts = (editor: Editor, pattern: Pattern): void => {
+    window.addEventListener('keydown', event => {
+        if(event.key === 'Escape') {
+            editor.cancelUserAction()
+        }
+    })
+}
