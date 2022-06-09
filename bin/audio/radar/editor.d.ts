@@ -1,0 +1,34 @@
+import { Obstacle } from "./obstacles.js";
+import { Pattern } from "./pattern.js";
+import { Point } from "./ray.js";
+export declare class Editor {
+    private readonly element;
+    private readonly pattern;
+    private readonly position;
+    private static Ray;
+    private static WaveformWidth;
+    private static Radius;
+    private static Size;
+    private static CaptureRadius;
+    private readonly canvas;
+    private readonly context;
+    private readonly angleResolution;
+    private readonly distanceResolution;
+    private tool;
+    private toolCursor;
+    private waveform;
+    readonly selection: Obstacle<any>[];
+    constructor(element: HTMLElement, pattern: Pattern, position: () => number);
+    cancelUserAction(): void;
+    globalToLocal(x: number, y: number): Point;
+    snap(local: Point, constrainToCircle?: boolean): Point;
+    showAudioBuffer(buffer: AudioBuffer | null): void;
+    deleteSelection(): void;
+    private update;
+    private installMoveTool;
+    private installCreateTool;
+    private switchTool;
+    private startDragging;
+    private closestObstacle;
+    private closestDragHandler;
+}

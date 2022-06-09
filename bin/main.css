@@ -1,0 +1,483 @@
+:root {
+  --color0: #0c1b33;
+  --color1: #b2aa8e;
+  --color2: #7a306c;
+  --color3: #03b5aa;
+  --color4: #dbfe87;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  font-family: "Open Sans", sans-serif;
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+  color: var(--color1);
+  background-color: var(--color0);
+}
+
+html {
+  width: -webkit-fill-available;
+  height: -webkit-fill-available;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100vw;
+  min-height: 100vh;
+  /* mobile viewport bug fix */
+  min-width: -webkit-fill-available;
+  min-height: -webkit-fill-available;
+}
+
+* {
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: content-box;
+  pointer-events: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.invisible {
+  visibility: hidden !important;
+}
+
+svg.preloader {
+  --percentage: 0.0;
+  --radius: 7;
+  top: 50%;
+  left: 50%;
+  width: 64px;
+  height: 64px;
+  transform: translate(-50%, -50%);
+  position: absolute;
+}
+svg.preloader.error circle {
+  stroke: #C30;
+}
+svg.preloader > circle.progress {
+  stroke-dasharray: calc(var(--radius) * 6.2831853);
+  stroke-dashoffset: calc(var(--radius) * 6.2831853 * (1 - var(--percentage)));
+}
+
+@keyframes menu-item-trigger {
+  0% {
+    color: black;
+    background-color: black;
+  }
+  50%, 100% {
+    color: #333333;
+    background-color: #ececec;
+  }
+}
+nav#app-menu {
+  flex: 0 0 32px;
+  display: flex;
+  margin: 0;
+  padding: 0 8px;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+nav#app-menu > button {
+  width: auto;
+  height: auto;
+  color: #E9E9E9;
+  padding: 6px 12px;
+  font-size: 13px;
+  background: transparent;
+  border-radius: 4px;
+  pointer-events: all;
+  border: none;
+  outline: none;
+}
+nav#app-menu > button.selected {
+  color: #E9E9E9;
+  background-color: #3A3A3A;
+}
+
+div.menu-layer {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  position: absolute;
+  pointer-events: none;
+  z-index: 999;
+}
+
+nav.menu {
+  position: absolute;
+  border-collapse: collapse;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #F2F2F2;
+  background-color: #2D2D2D;
+  border: 1px #575757 solid;
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 128px;
+  max-height: 100%;
+  padding: 8px 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 8px 8px 0 rgba(0, 0, 0, 0.3);
+  pointer-events: all;
+}
+nav.menu.shutdown {
+  pointer-events: none;
+}
+nav.menu.overflowing div.scroll {
+  display: flex;
+}
+nav.menu > div.container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: all;
+}
+nav.menu > div.container > div.default {
+  flex: 1 0 22px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  margin: 0 4px;
+  padding: 0 8px 0 4px;
+  pointer-events: inherit;
+  white-space: nowrap;
+}
+nav.menu > div.container > div.default.selected {
+  background-color: #797979;
+}
+nav.menu > div.container > div.default.triggered {
+  animation-name: menu-item-trigger;
+  animation-iteration-count: 2;
+  animation-duration: 100ms;
+  animation-direction: alternate;
+  animation-timing-function: ease-out;
+}
+nav.menu > div.container > div.default > svg.check-icon, nav.menu > div.container > div.default svg.children-icon {
+  pointer-events: none;
+  fill: none;
+  stroke: #F2F2F2;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  width: 12px;
+  height: 12px;
+}
+nav.menu > div.container > div.default > svg.check-icon {
+  visibility: hidden;
+}
+nav.menu > div.container > div.default > svg.children-icon {
+  display: none;
+}
+nav.menu > div.container > div.default.checked > svg.check-icon {
+  visibility: visible;
+}
+nav.menu > div.container > div.default.has-children > svg.children-icon {
+  display: block;
+}
+nav.menu > div.container > div.default:not(.selectable) {
+  color: #6d6d6d;
+  pointer-events: none;
+}
+nav.menu > div.container > div.default > div.label {
+  pointer-events: none;
+  flex: 1;
+  margin: 0 24px 0 4px;
+}
+nav.menu > div.container > div.default > div.shortcut {
+  display: flex;
+  opacity: 0.3;
+  pointer-events: none;
+  margin: 0;
+  justify-content: flex-end;
+}
+nav.menu > div.container > div.default > div.shortcut > span {
+  flex: 0 0 1em;
+  text-align: center;
+}
+nav.menu > div.container > hr {
+  margin: 5px 12px;
+  width: calc(100% - 24px);
+  height: 0;
+  border: 0;
+  border-top: 1px solid #515151;
+  pointer-events: none;
+}
+nav.menu > div.scroll {
+  display: none;
+  justify-content: center;
+  flex: 1 0 20px;
+  line-height: 22px;
+  margin: 4px 0;
+  width: 100%;
+  color: #666;
+}
+nav.menu > div.scroll.up {
+  margin-top: -3px;
+}
+nav.menu > div.scroll.down {
+  margin-bottom: -3px;
+}
+nav.menu > div.scroll.scrolling {
+  color: #DDD;
+}
+
+button {
+  color: rgba(255, 255, 255, 0.4);
+  fill: currentColor;
+  font-size: 11px;
+  font-family: "Open Sans", sans-serif;
+  height: 21px;
+  line-height: 21px;
+  min-width: 21px;
+  border-radius: 2px;
+  text-align: center;
+  appearance: none;
+  padding: 0;
+  border: none;
+  outline: none;
+  background-color: rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  pointer-events: all;
+}
+button:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+button:active {
+  color: white;
+}
+button:disabled {
+  opacity: 0.3;
+}
+
+label.checkbox {
+  border: none;
+  outline: none;
+  white-space: nowrap;
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+label.checkbox input[type=checkbox] {
+  appearance: none;
+  display: none;
+}
+label.checkbox.slider {
+  min-height: 15px;
+  max-height: 15px;
+  width: 32px;
+  border-radius: 15px !important;
+  font-size: 12px;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+label.checkbox.slider span {
+  top: 3px;
+  left: 3px;
+  right: unset;
+  width: 9px;
+  height: 9px;
+  border-radius: 11px;
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+label.checkbox.slider input[type=checkbox]:checked + span {
+  left: unset;
+  right: 3px;
+}
+label.checkbox.toggle {
+  height: 16px;
+  font-size: 16px;
+}
+label.checkbox.toggle span.checked {
+  display: none;
+}
+label.checkbox.toggle span.unchecked {
+  display: block;
+}
+label.checkbox.toggle span svg {
+  fill: currentColor;
+}
+label.checkbox.toggle input[type=checkbox]:checked ~ span.checked {
+  display: block !important;
+}
+label.checkbox.toggle input[type=checkbox]:checked ~ span.unchecked {
+  display: none !important;
+}
+
+fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
+  opacity: 0.2;
+}
+
+input[type=text] {
+  height: 21px;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  outline: none;
+  margin: 0;
+  padding: 0;
+  font-size: 11px;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  font-family: "Open Sans", sans-serif;
+  pointer-events: all;
+}
+input[type=text]:focus {
+  box-shadow: 0 0 0 1px rgba(39, 107, 174, 0.6) inset;
+}
+input[type=text]::selection {
+  background-color: #276bae;
+}
+
+select {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  outline: none;
+  margin: 0;
+  padding: 0;
+  font-size: 11px;
+  background-color: rgba(0, 0, 0, 0.3);
+  appearance: none;
+}
+
+main {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+}
+main .radar {
+  flex: 1 0 0;
+  display: flex;
+  position: relative;
+}
+main .radar canvas {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  pointer-events: all;
+}
+main .radar .controls {
+  display: flex;
+  flex-direction: column;
+  row-gap: 8px;
+  padding: 8px;
+  border-radius: 3px;
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+form.tools {
+  top: max(50% - 336px, 0px);
+  left: max(50% - 336px, 0px);
+  padding: 6px 3px;
+  flex: 0 0 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 4px;
+  row-gap: 4px;
+  position: absolute;
+  overflow: hidden;
+  background: linear-gradient(rgba(255, 255, 255, 0.06) 25%, rgba(255, 255, 255, 0.1));
+  box-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.3), 0 3px 4px 0 rgba(0, 0, 0, 0.5), 0 16px 8px 0 rgba(0, 0, 0, 0.1);
+}
+form.tools svg {
+  padding: 4px;
+  width: 20px;
+  height: 14px;
+  color: #AAA;
+  border-radius: 4px;
+}
+form.tools label {
+  display: flex;
+  pointer-events: all;
+}
+form.tools label.separator-after {
+  margin-bottom: 8px;
+}
+form.tools label:hover svg {
+  box-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.2);
+  background-color: rgba(0, 0, 0, 0.1);
+}
+form.tools label input {
+  display: none;
+}
+form.tools label input:checked + svg {
+  color: #CCC;
+  box-shadow: 0 0 1px 0.5px rgba(173, 235, 235, 0.5);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+div.two-columns {
+  display: grid;
+  align-items: center;
+  grid-template-columns: minmax(80px, 1fr) 84px;
+  row-gap: 3px;
+  column-gap: 4px;
+  line-height: 21px;
+  height: min-content;
+}
+div.two-columns > * {
+  height: 21px;
+  overflow: hidden;
+  border-radius: 2px;
+}
+div.two-columns > .empty {
+  grid-column: 1/3;
+}
+div.two-columns label {
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: right;
+}
+div.two-columns label.name {
+  padding-right: 4px;
+}
+div.two-columns label.bold {
+  font-weight: 700;
+}
+div.two-columns fieldset.stepper {
+  display: grid;
+  grid-template-columns: 21px 40px 21px;
+  column-gap: 1px;
+  font-size: 11px;
+  outline: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  pointer-events: all;
+}
+div.two-columns fieldset.stepper > button {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 7px;
+  font-family: "Open Sans", sans-serif;
+  width: 21px;
+  height: 21px;
+  text-align: center;
+  appearance: none;
+  border-radius: 0;
+  padding: 0;
+  border: none;
+  pointer-events: all;
+}
+div.two-columns fieldset.stepper > button:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+div.two-columns fieldset.stepper > button:active {
+  color: white;
+}
+
+/*# sourceMappingURL=main.css.map */
