@@ -9,6 +9,8 @@ export interface PatternFormat {
     };
     obstacles: ObstacleFormat[];
     file: string;
+    bpm: number;
+    bars: number;
 }
 export declare class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
     private readonly terminator;
@@ -16,15 +18,15 @@ export declare class Pattern implements Observable<Pattern>, Serializer<PatternF
     private readonly origin;
     private readonly file;
     private readonly bpm;
-    private readonly bar;
+    private readonly bars;
     private readonly obstacles;
     constructor();
     addObstacle(obstacle: Obstacle<any>): void;
     removeObstacle(obstacle: Obstacle<any>): void;
     getObstacles(): ReadonlyArray<Obstacle<any>>;
     getOrigin(): Readonly<Point>;
-    getBarValue(): ObservableValue<number>;
-    getBpmValue(): ObservableValue<number>;
+    getBars(): ObservableValue<number>;
+    getBpm(): ObservableValue<number>;
     clearObstacles(): void;
     resetOrigin(): void;
     onChanged(): void;

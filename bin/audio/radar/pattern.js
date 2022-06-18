@@ -7,8 +7,8 @@ export class Pattern {
         this.observable = this.terminator.with(new ObservableImpl());
         this.origin = { x: 0.0, y: 0.0 };
         this.file = new ObservableValueImpl('dnb.ogg');
-        this.bpm = new ObservableValueImpl(120.0);
-        this.bar = new ObservableValueImpl(4);
+        this.bpm = new ObservableValueImpl(160.0);
+        this.bars = new ObservableValueImpl(2);
         this.obstacles = [new OutlineObstacle(this)];
         this.dragHandlers = [{
                 distance: (x, y) => {
@@ -20,7 +20,7 @@ export class Pattern {
                 }, constrainToCircle: () => true,
                 obstacle: null
             }];
-        this.terminator.with(this.bar.addObserver(() => this.observable.notify(this)));
+        this.terminator.with(this.bars.addObserver(() => this.observable.notify(this)));
         this.terminator.with(this.bpm.addObserver(() => this.observable.notify(this)));
     }
     addObstacle(obstacle) {
@@ -39,10 +39,10 @@ export class Pattern {
     getOrigin() {
         return this.origin;
     }
-    getBarValue() {
-        return this.bar;
+    getBars() {
+        return this.bars;
     }
-    getBpmValue() {
+    getBpm() {
         return this.bpm;
     }
     clearObstacles() {
@@ -81,6 +81,8 @@ export class Pattern {
             }
         }));
         this.file.set(format.file);
+        this.bpm.set(format.bpm);
+        this.bars.set(format.bars);
         this.observable.notify(this);
         return this;
     }
@@ -90,7 +92,9 @@ export class Pattern {
             obstacles: this.obstacles
                 .slice(1)
                 .map(obstacle => obstacle.serialize()),
-            file: this.file.get()
+            file: this.file.get(),
+            bpm: this.bpm.get(),
+            bars: this.bars.get()
         };
     }
     terminate() {

@@ -1,17 +1,24 @@
 import { TAU } from "../../lib/math.js";
-import { RENDER_QUANTUM } from "../common.js";
+import { barsToNumFrames, RENDER_QUANTUM } from "../common.js";
 import { Pattern } from "./pattern.js";
 import { Ray } from "./ray.js";
+const UpdateBlocks = Math.floor(sampleRate / RENDER_QUANTUM / 60) | 0;
+const BestCorrelationWindow = 512;
+const CrossLength = 1024;
 registerProcessor("radar", class extends AudioWorkletProcessor {
     constructor() {
         super();
-        this.NUM_BLOCKS = Math.floor(sampleRate / RENDER_QUANTUM / 60) | 0;
         this.pattern = new Pattern();
         this.ray = new Ray();
-        this.remaining = this.NUM_BLOCKS;
+        this.remaining = UpdateBlocks;
         this.audio = null;
         this.frames = 0 | 0;
-        this.position = 0 | 0;
+        this.headA = -1;
+        this.headB = -1;
+        this.headCross = 0;
+        this.headDirection = true;
+        this.phase = 0.0;
+        this.phaseIncr = 0.0;
         this.moving = false;
         this.port.onmessage = event => {
             const message = event.data;
@@ -21,6 +28,9 @@ registerProcessor("radar", class extends AudioWorkletProcessor {
             }
             else if (message.type === "update-pattern") {
                 this.pattern.deserialize(message.format);
+                const bpm = this.pattern.getBpm().get();
+                const bars = this.pattern.getBars().get();
+                this.phaseIncr = 1.0 / barsToNumFrames(bars, bpm, sampleRate);
             }
             else if (message.type === "transport-play") {
                 this.moving = true;
@@ -29,6 +39,7 @@ registerProcessor("radar", class extends AudioWorkletProcessor {
                 this.moving = false;
             }
             else if (message.type === "transport-move") {
+                throw new Error('Not implemented');
             }
         };
     }
@@ -40,19 +51,60 @@ registerProcessor("radar", class extends AudioWorkletProcessor {
         const outR = output[1];
         const audioL = this.audio[0];
         const audioR = this.audio[1];
-        const origin = this.pattern.getOrigin();
+        if (this.headA === -1 || this.headB === -1) {
+            this.headA = this.headB = this.map();
+        }
         for (let i = 0; i < RENDER_QUANTUM; i++) {
-            this.ray.reuse(this.position / this.frames * TAU, origin.x, origin.y);
-            const position = Math.floor(this.ray.eval(this.pattern.getObstacles()) / TAU * this.frames);
-            outL[i] = audioL[position];
-            outR[i] = audioR[position];
-            this.position++;
+            if (this.headDirection) {
+                if (++this.headCross === CrossLength) {
+                    this.headA = this.bestCorrelation(this.headB, this.map());
+                    this.headDirection = false;
+                }
+            }
+            else {
+                if (--this.headCross === 0) {
+                    this.headB = this.bestCorrelation(this.headA, this.map());
+                    this.headDirection = true;
+                }
+            }
+            const alpha = this.headCross / CrossLength;
+            const pA = this.headA % this.frames;
+            const pB = this.headB % this.frames;
+            outL[i] = audioL[pA] * (1.0 - alpha) + audioL[pB] * alpha;
+            outR[i] = audioR[pA] * (1.0 - alpha) + audioR[pB] * alpha;
+            this.phase += this.phaseIncr;
+            this.headA++;
+            this.headB++;
         }
         if (--this.remaining === 0) {
-            this.remaining = this.NUM_BLOCKS;
-            this.port.postMessage(this.position / this.frames);
+            this.remaining = UpdateBlocks;
+            this.port.postMessage(this.phase);
         }
         return true;
+    }
+    map() {
+        const origin = this.pattern.getOrigin();
+        this.ray.reuse(this.phase * TAU, origin.x, origin.y);
+        return Math.floor(this.ray.eval(this.pattern.getObstacles()) / TAU * this.frames);
+    }
+    bestCorrelation(prev, next) {
+        const ch0 = this.audio[0];
+        let min = Number.POSITIVE_INFINITY;
+        let index = 0;
+        for (let j = 0; j < BestCorrelationWindow; j++) {
+            const curr = next + j;
+            let corr = 0.0;
+            for (let i = 0; i < BestCorrelationWindow; i++) {
+                const a = ch0[(prev + i) % this.frames];
+                const b = ch0[(curr + i) % this.frames];
+                corr += (a - b) * (a - b);
+            }
+            if (min > corr) {
+                min = corr;
+                index = j;
+            }
+        }
+        return (next + index) % this.frames;
     }
 });
 //# sourceMappingURL=processor.js.map
