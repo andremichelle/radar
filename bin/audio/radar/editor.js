@@ -52,10 +52,10 @@ export class Editor {
             const layout = new UIControllerLayout(HTML.query('[data-component=pattern]', this.element));
             layout
                 .createNumericStepper('Bpm', PrintMapping.INTEGER, NumericStepper.Integer)
-                .with(pattern.getBpmValue());
+                .with(pattern.getBpm());
             layout
                 .createNumericStepper('Bar', PrintMapping.INTEGER, NumericStepper.Integer)
-                .with(pattern.getBarValue());
+                .with(pattern.getBars());
         }
         {
             const layout = new UIControllerLayout(HTML.query('[data-component=snapping]', this.element));

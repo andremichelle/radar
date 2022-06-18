@@ -6,7 +6,7 @@ export class Pattern {
         this.terminator = new Terminator();
         this.observable = this.terminator.with(new ObservableImpl());
         this.origin = { x: 0.0, y: 0.0 };
-        this.file = new ObservableValueImpl('dnb.ogg');
+        this.file = new ObservableValueImpl('amen.wav');
         this.bpm = new ObservableValueImpl(160.0);
         this.bars = new ObservableValueImpl(2);
         this.obstacles = [new OutlineObstacle(this)];

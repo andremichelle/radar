@@ -64,6 +64,50 @@ export const installMenu = (editor, pattern) => {
         item
             .addListItem(ListItem.default('Delete', 'del')
             .onTrigger(() => __awaiter(void 0, void 0, void 0, function* () { return editor.deleteSelection(); })));
+    }))
+        .addButton(HTML.query('[data-menu=loops]'), ListItem.root()
+        .addRuntimeChildrenCallback(item => {
+        item
+            .addListItem(ListItem.default('Amen Break', '')
+            .onTrigger(() => __awaiter(void 0, void 0, void 0, function* () {
+            return pattern.deserialize({
+                file: 'amen.wav',
+                origin: { x: 0.0, y: 0.0 },
+                obstacles: [],
+                bars: 2.0,
+                bpm: 165.0
+            });
+        })))
+            .addListItem(ListItem.default('80 Bell Minor', '')
+            .onTrigger(() => __awaiter(void 0, void 0, void 0, function* () {
+            return pattern.deserialize({
+                file: 'bell.wav',
+                origin: { x: 0.0, y: 0.0 },
+                obstacles: [],
+                bars: 4.0,
+                bpm: 165.0
+            });
+        })))
+            .addListItem(ListItem.default("You Know You're Going to Feel it", '')
+            .onTrigger(() => __awaiter(void 0, void 0, void 0, function* () {
+            return pattern.deserialize({
+                file: 'voice.wav',
+                origin: { x: 0.0, y: 0.0 },
+                obstacles: [],
+                bars: 1.0,
+                bpm: 70.0
+            });
+        })))
+            .addListItem(ListItem.default("Riemann Dub Techno", '')
+            .onTrigger(() => __awaiter(void 0, void 0, void 0, function* () {
+            return pattern.deserialize({
+                file: 'riemann.wav',
+                origin: { x: 0.0, y: 0.0 },
+                obstacles: [],
+                bars: 4.0,
+                bpm: 125.0
+            });
+        })));
     }));
 };
 export const installShortcuts = (editor, pattern) => {

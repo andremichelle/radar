@@ -24,7 +24,7 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
     private readonly terminator: Terminator = new Terminator()
     private readonly observable: ObservableImpl<Pattern> = this.terminator.with(new ObservableImpl<Pattern>())
     private readonly origin: Point = {x: 0.0, y: 0.0}
-    private readonly file: ObservableValueImpl<string> = new ObservableValueImpl<string>('dnb.ogg')
+    private readonly file: ObservableValueImpl<string> = new ObservableValueImpl<string>('amen.wav')
     private readonly bpm: ObservableValueImpl<number> = new ObservableValueImpl<number>(160.0)
     private readonly bars: ObservableValueImpl<number> = new ObservableValueImpl<number>(2)
     private readonly obstacles: Obstacle<any>[] = [new OutlineObstacle(this)]
