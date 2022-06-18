@@ -16,6 +16,8 @@ export interface PatternFormat {
     origin: { x: number, y: number }
     obstacles: ObstacleFormat[]
     file: string
+    bpm: number
+    bars: number
 }
 
 export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
@@ -23,12 +25,12 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
     private readonly observable: ObservableImpl<Pattern> = this.terminator.with(new ObservableImpl<Pattern>())
     private readonly origin: Point = {x: 0.0, y: 0.0}
     private readonly file: ObservableValueImpl<string> = new ObservableValueImpl<string>('dnb.ogg')
-    private readonly bpm: ObservableValueImpl<number> = new ObservableValueImpl<number>(120.0)
-    private readonly bar: ObservableValueImpl<number> = new ObservableValueImpl<number>(4)
+    private readonly bpm: ObservableValueImpl<number> = new ObservableValueImpl<number>(160.0)
+    private readonly bars: ObservableValueImpl<number> = new ObservableValueImpl<number>(2)
     private readonly obstacles: Obstacle<any>[] = [new OutlineObstacle(this)]
 
     constructor() {
-        this.terminator.with(this.bar.addObserver(() => this.observable.notify(this)))
+        this.terminator.with(this.bars.addObserver(() => this.observable.notify(this)))
         this.terminator.with(this.bpm.addObserver(() => this.observable.notify(this)))
     }
 
@@ -52,11 +54,11 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
         return this.origin
     }
 
-    getBarValue(): ObservableValue<number> {
-        return this.bar
+    getBars(): ObservableValue<number> {
+        return this.bars
     }
 
-    getBpmValue(): ObservableValue<number> {
+    getBpm(): ObservableValue<number> {
         return this.bpm
     }
 
@@ -100,6 +102,8 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
             }
         }))
         this.file.set(format.file)
+        this.bpm.set(format.bpm)
+        this.bars.set(format.bars)
         this.observable.notify(this)
         return this
     }
@@ -110,7 +114,9 @@ export class Pattern implements Observable<Pattern>, Serializer<PatternFormat> {
             obstacles: this.obstacles
                 .slice(1)
                 .map(obstacle => obstacle.serialize()),
-            file: this.file.get()
+            file: this.file.get(),
+            bpm: this.bpm.get(),
+            bars: this.bars.get()
         }
     }
 
